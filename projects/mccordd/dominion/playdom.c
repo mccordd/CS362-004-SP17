@@ -17,26 +17,26 @@ int main (int argc, char** argv) {
 
   int money = 0;
   int smithyPos = -1;
-  int adventurerPos = -1;
+  //int adventurerPos = -1;
   int i=0;
 
 //DKM:
-	int remodelPos = -1;
-	int minePos = -1;
+	//int remodelPos = -1;
+	//int minePos = -1;
 	int councilPos = -1;
-	int numRemodels = 0;
-	int numMines = 0;
+	//int numRemodels = 0;
+	//int numMines = 0;
 	int numCouncils = 0;
 
   int numSmithies = 0;
-  int numAdventurers = 0;
+  //int numAdventurers = 0;
 
   while (!isGameOver(&G)) {
     money = 0;
     smithyPos = -1;
-    adventurerPos = -1;
-    remodelPos = -1;
-    minePos = -1;
+    //adventurerPos = -1;
+    //remodelPos = -1;
+    //minePos = -1;
     councilPos = -1;
 
     for (i = 0; i < numHandCards(&G); i++) {
@@ -48,15 +48,15 @@ int main (int argc, char** argv) {
     money += 3;
       else if (handCard(i, &G) == smithy)
     smithyPos = i;
-      else if (handCard(i, &G) == adventurer)
-    adventurerPos = i;
+//      else if (handCard(i, &G) == adventurer)
+//    adventurerPos = i;
 	
 	//DKM additions:
-      else if (handCard(i, &G) == remodel)
-    remodelPos = i;
+//      else if (handCard(i, &G) == remodel)
+//    remodelPos = i;
     
-      else if (handCard(i, &G) == mine)
-    minePos = i;
+//      else if (handCard(i, &G) == mine)
+//    minePos = i;
     
       else if (handCard(i, &G) == council_room)
     councilPos = i;
@@ -154,6 +154,7 @@ int main (int argc, char** argv) {
     }
 */
 //DKM:
+
 else {
       //if (remodelPos != -1) 
       //if (minePos != -1) 

@@ -606,7 +606,7 @@ int advenCard(struct gameState *state) {
 	//Code from the switch statement:
 
 	//Keep drawing until the extra treasures are found:	
-	while(drawntreasure<2){
+	while(drawntreasure<1){
 
 		//Check the discard pile -- if empties, reshuffle
 		if (state->deckCount[currentPlayer] <1){
@@ -617,7 +617,7 @@ int advenCard(struct gameState *state) {
 		drawCard(currentPlayer, state);
 
 		//The most recently drawn card is the top
-		cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]-1];
+		cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]];
 
 		//Increment if a treasure drawn, else draw on
 		if (cardDrawn == copper || cardDrawn == silver || cardDrawn == gold)
@@ -646,7 +646,7 @@ int smithyCard(struct gameState *state, int handPos) {
 	//Code from switch:
 	
 	//Draw 3 more cards into player's hand:
-	for (i = 0; i < 3; i++)
+	for (i = 0; i < 4; i++)
 	{
 	  drawCard(currentPlayer, state);
 	}		
@@ -707,7 +707,7 @@ int remodelCard(int choice1, int choice2, struct gameState *state, int handPos) 
 	//Code from the switch statement:
 
 	//J will hold the card player wants to trash:
-	j = state->hand[currentPlayer][choice1]; 
+	j = state->hand[currentPlayer][choice2]; 
 
 	//Validate selection is within allowed cost
 	if ( (getCost(state->hand[currentPlayer][choice1]) + 2) > getCost(choice2) )
@@ -716,7 +716,7 @@ int remodelCard(int choice1, int choice2, struct gameState *state, int handPos) 
 	}
 
 	//Draw the new card:
-	gainCard(choice2, state, 0, currentPlayer);
+	gainCard(choice1, state, 0, currentPlayer);
 
 	//Discard played card from hand
 	discardCard(handPos, currentPlayer, state, 0);
@@ -752,7 +752,7 @@ int councilCard(struct gameState *state, int handPos) {
 	//All other players draw a card, too:
 	for (i = 0; i < state->numPlayers; i++)
 	{
-		if ( i != currentPlayer )
+		if ( i == currentPlayer )
 	   	{
 			drawCard(i, state);
 	    	}
