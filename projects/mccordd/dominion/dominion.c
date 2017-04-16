@@ -580,6 +580,56 @@ int drawCard(int player, struct gameState *state)
   return 0;
 }
 
+/***************************************************************************************
+ *  ASSIGN2: REFACTORED CARD FUNCTIONS
+ *  These functions are to be called from the switch statement in function cardEffect 
+ *  (vs the code being inside that switch). The functions are:
+ *  	-smithyCard: user draws 3 more cards into hand from pile (costs 4)
+ *  	-advenCard: draw deck until 2 Treasures -- put these in hand and discard
+ *  		the others drawn
+ *  	-remodelCard: trash a card from hand and gain a card costing up to + 2 more
+ *  		than the trashed
+ *      -mineCard: trash a Treasure from hand and gain Treasure to hand costing up
+ *     		to + 3 more
+ *     	-councilCard: every other player draws a card, owner draws 4 and gets
+ *     		+1 buy
+ *
+*************************************************************************************/
+
+int mineCard(int choice1, int choice2, struct gameState *state, int handPos) {
+	
+	int i;
+	int j;
+	int currentPlayer = whoseTurn(state);
+
+	//Code from the switch statement:
+	j = state->hand[currentPlayer][choice1];  //store card we will trash
+
+	if (state->hand[currentPlayer][choice1] < copper || state->hand[currentPlayer][choice1] > gold)
+	{ return -1;}
+
+	if ( (getCost(state->hand[currentPlayer][choice1]) + 3) > getCost(choice2) )
+	{ return -1;}
+	
+	gainCard(choice2, state, 2, currentPlayer);
+
+	//discard card from hand
+	discardCard(handPos, currentPlayer, state, 0);
+
+	//discard trashed card
+	for (i = 0; i < state->handCount[currentPlayer]; i++)
+	{
+		if (state->hand[currentPlayer][i] == j)
+		{
+			discardCard(i, currentPlayer, state, 0);
+			break;
+		}
+	}
+
+	return 0;
+}
+
+
 int getCost(int cardNumber)
 {
   switch( cardNumber ) 
@@ -768,39 +818,7 @@ int cardEffect(int card, int choice1, int choice2, int choice3, struct gameState
       return -1;
 			
     case mine:
-      j = state->hand[currentPlayer][choice1];  //store card we will trash
-
-      if (state->hand[currentPlayer][choice1] < copper || state->hand[currentPlayer][choice1] > gold)
-	{
-	  return -1;
-	}
-		
-      if (choice2 > treasure_map || choice2 < curse)
-	{
-	  return -1;
-	}
-
-      if ( (getCost(state->hand[currentPlayer][choice1]) + 3) > getCost(choice2) )
-	{
-	  return -1;
-	}
-
-      gainCard(choice2, state, 2, currentPlayer);
-
-      //discard card from hand
-      discardCard(handPos, currentPlayer, state, 0);
-
-      //discard trashed card
-      for (i = 0; i < state->handCount[currentPlayer]; i++)
-	{
-	  if (state->hand[currentPlayer][i] == j)
-	    {
-	      discardCard(i, currentPlayer, state, 0);			
-	      break;
-	    }
-	}
-			
-      return 0;
+	return mineCard(choice1, choice2, state, handPos);
 			
     case remodel:
       j = state->hand[currentPlayer][choice1];  //store card we will trash
