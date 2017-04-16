@@ -130,6 +130,14 @@ int getWinners(int players[MAX_PLAYERS], struct gameState *state);
 /* Set array position of each player who won (remember ties!) to
    1, others to 0 */
 
+//DKM: 4/16/17 prototypes for Assign2 refactoring:
+int smithyCard(struct gameState *state, int handPos);
+int advenCard(struct gameState *state);
+int remodelCard(int choice1, int choice2, struct gameState *state, int handPos);
+int mineCard(int choice1, int choice2, struct gameState *state, int handPos);
+int councilCard(struct gameState *state, int handPos);
+
+//DKM: These were pre-existing -- are these prototypes left over from another version?
 int playAdventurer(struct gameState *state);
 int playSmithy(struct gameState *state, int handPos);
 int playVillage(struct gameState *state, int handPos);
