@@ -1,1 +1,1 @@
-The projects directory should contain your onid folder 
+Exterior readme to projects/mccordd
