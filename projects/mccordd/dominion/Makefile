@@ -47,8 +47,13 @@ unittestresults.out: unittest1.c unittest2.c dominion.c rngs.c
 	./unittest3 >> unittestresults.out
 	gcov dominion.c >> unittestresults.out
 
-dkm: unittest3.c dominion.c rngs.c
-	gcc -o dkm dominion.c rngs.c unittest3.c $(CFLAGS)
+	echo "unittest4.c:" >> unittestresults.out
+	gcc -o unittest4 dominion.c rngs.c unittest4.c $(CFLAGS)
+	./unittest4 >> unittestresults.out
+	gcov dominion.c >> unittestresults.out
+
+dkm: cardtest1.c dominion.c rngs.c
+	gcc -o dkm dominion.c rngs.c cardtest1.c $(CFLAGS)
 
 player: player.c interface.o
 	gcc -o player player.c -g  dominion.o rngs.o interface.o $(CFLAGS)

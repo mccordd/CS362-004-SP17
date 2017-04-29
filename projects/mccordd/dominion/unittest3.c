@@ -63,7 +63,7 @@ int main() {
     //Game return state
     int g;
 
-    //Starting with 3 players in test
+    //Starting with 2 players in test
     int pNum = 2; 
     //Our selection of Kingdom Cards, kept from provided test of updateCoins
     int k[10] = {adventurer, council_room, feast, gardens, mine
