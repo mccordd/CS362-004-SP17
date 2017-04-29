@@ -1,7 +1,3 @@
-#MODIFIED BY DKM 4/16/17 -- see Assignment-2 PDF for explanation. 'all' commented and replaced
-#	with the instructor-provided test code.
-#
-
 CFLAGS = -Wall -fpic -coverage -lm
 
 rngs.o: rngs.h rngs.c
@@ -33,13 +29,24 @@ runtests: testDrawCard
 	gcov dominion.c >> unittestresult.out
 	cat dominion.c.gcov >> unittestresult.out
 
+unittestresults.out: unittest1.c unittest2.c dominion.c rngs.c
+	echo "FUNCTION UNIT TEST RESULTS:" > unittestresults.out
+
+	echo "unittest1.c:" >> unittestresults.out
+	gcc -o unittest1 dominion.c rngs.c unittest1.c $(CFLAGS)
+	./unittest1 >> unittestresults.out
+	gcov dominion.c >> unittestresults.out
+
+	echo "unittest2.c:" >> unittestresults.out
+	gcc -o unittest2 dominion.c rngs.c unittest2.c $(CFLAGS)
+	./unittest2 >> unittestresults.out
+	gcov dominion.c >> unittestresults.out
+
 
 player: player.c interface.o
 	gcc -o player player.c -g  dominion.o rngs.o interface.o $(CFLAGS)
 
-#all: playdom player testDrawCard testBuyCard badTestDrawCard
-#DKM MODIFIED make all:
-all: dominion.o playdom
+all: playdom player testDrawCard testBuyCard badTestDrawCard
 
 clean:
-	rm -f *.o playdom.exe playdom test.exe test player player.exe testInit testInit.exe *.gcov *.gcda *.gcno *.so
+	rm -f *.o playdom.exe playdom test.exe test player player.exe testInit testInit.exe *.gcov *.gcda *.gcno *.so *.out
