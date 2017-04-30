@@ -47,19 +47,15 @@ int main() {
     //For saving initial 'other' player game state values:
     int p1hc, p1dec, p1dis;
     int p2hc, p2dec, p2dis;
-    //And for p0s original coin count (before card played)
-    int p0cc = 0;
 
     //And for current values:
     int chc = 0;
     int cdec = 0;
     int cdis = 0;
 
-    //Return value for advenCard
-    int acr = 0;
+    //Return value for remodelCard
+    int rcr = 0;
 
-    //Return value for updateCoins
-    int ucr = 0;
 
     //For card cost value:
     int cc = 0;
@@ -103,91 +99,63 @@ int main() {
     /*************************************/
 
 
-    printf("****CARD UNIT TEST 2: Adventurer****\n");
+    printf("****CARD UNIT TEST 3: Remodel****\n");
 
-    printf("TEST 1: set deck, run and verify right Treasures added: \n");
-    //Update coins and grab the coin total before adventurer is played:
-    ucr = updateCoins(0, &testGameA, 0); 
-    if (ucr != 0)
+    printf("TEST 1: set hand, verify desired trash is trashed, desired replacement done : \n");
+
+    //Stage remodel and a village into player 0;s hand -- village will be trashed:
+    testGameA.hand[0][3] = village;
+    testGameA.hand[0][4] = remodel;
+
+    //Play remodel card for player 0, trashing village (3) and buying a council_room (5) - enum is 8
+    rcr = remodelCard(3, 8, &testGameA, 4);
+    if (rcr != 0)
     {
-        printf("TEST CRITICAL FAIL; updateCoins fails\n");
+        printf("TEST CRITICAL FAIL; remodelCard refactor fails\n");
         exit(-1);
     }
 
-    p0cc = testGameA.coins; 
-
-    //Stage player 0's deck to have a Treasure (gold) lowest, then on top:
-    //	gardens, feast, mine, Treasure(silver), duchy
-    testGameA.deck[0][testGameA.deckCount[0]] = gold;
-    testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = gardens;
-    testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = feast;
-    testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = mine;
-    testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = silver;
-    testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = duchy;
-    testGameA.deckCount[0]++;
-
-
-    //Stage adventurer into player 0;s hand:
-    testGameA.hand[0][4] = adventurer;
-
-    //Play adventurer card for player 0:
-    acr = advenCard(&testGameA);
-    if (acr != 0)
-    {
-        printf("TEST CRITICAL FAIL; advenCard refactor fails\n");
-        exit(-1);
-    }
-
-    //Check player 0's hand count -- it should equal 6 (5 + 2 -1, with Adventurer discarded)
+    //Verify hand count is 4 (5 - 1 trashed -1 remodel discard +1 replacement)
     chc = testGameA.handCount[0];
-    printf("	card played, player 0 hand count is: %d; expected: %d\n", chc, 6);
+    printf("	card played, player 0 hand count is: %d; expected: %d\n", chc, 4);
 	testTotal++;
-	if(chc == 6)
+	if(chc == 4)
 	{
 		printf("PASSED\n");
 		passCount++;	
 	}
 	else printf("TEST FAILED\n");
 
-	//Check the cards above fourth in player's hand -- they should be silver and gold:
-	if(testGameA.hand[0][4] == silver) 
+	//Verify the added card (should be in position 3) is the council_room:
+	if(testGameA.hand[0][3] == council_room) 
 	{
-		printf("	player 0 card 4 is silver\nPASSED\n");
+		printf("	player 0 card 4 is council room\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 4 is silver\nTEST FAILED\n");
+	else printf("	player 0 card 4 is council room\nTEST FAILED\n");
+	testTotal++;		
+
+	/*
+	//TEMP TEST: returning as village -- so it is not being trashed as directed
+	int t = 0;
+	t = testGameA.hand[0][3];
+	printf("TEMP: fourth card in hand is: %d\n", t);
+	*/
+
+
+    printf("\nTEST 2: try to replace with a card that's too expensive: \n");
+
+    //Run remodelCard as above but pass in province as the desired buy (cost 8 is too great)
+    //	First, re-stage remodel and a village into player 0;s hand -- village will be trashed:
+    testGameA.hand[0][3] = village;
+    testGameA.hand[0][4] = remodel;
+
+    //Play remodel card for player 0, trashing village (3) and buying a province (8) - enum is 3
+    rcr = remodelCard(3, 3, &testGameA, 4);
+
+    printf("	P0 buys too much, function returned: %d, expected: %d\n", rcr, -1);
 	testTotal++;
-
-	//Check the cards above 5 in player's hand -- they should be feast, village, baron:
-	if(testGameA.hand[0][5] == gold) 
-	{
-		printf("	player 0 card 5 is gold\nPASSED\n");
-		passCount++;
-	}
-	else printf("	player 0 card 5 is gold\nTEST FAILED\n");
-	testTotal++;
-
-
-
-    printf("\nTEST 2: coins return the right new Treasure total: \n");
-
-    //Run the update coins so we can measure coin total -- it should be the 
-    //	original coin total +5 for a silver and gold. 
-    ucr = updateCoins(0, &testGameA, 0); 
-    if (ucr != 0)
-    {
-        printf("TEST CRITICAL FAIL; updateCoins fails\n");
-        exit(-1);
-    }   
-    printf("	player 0 original coin count: %d\n", p0cc);
-    printf("	player 0 new coin count: %d, expected (above + 5): %d\n", testGameA.coins, p0cc+5);
-	testTotal++;
-	if (testGameA.coins == p0cc) 
+	if (rcr == -1) 
 	{
 		printf("PASSED\n");
 		passCount++;
@@ -233,11 +201,11 @@ int main() {
 
 
     printf("\nTEST 4: card cost check: \n");
-	//Per the enum, Adventurer is card #7
-	cc = getCost(7);
-	printf("	Adventurer card cost returns as: %d, expected: %d\n", cc, 6);
+	//Per the enum, remodel is card #12
+	cc = getCost(12);
+	printf("	Remodel card cost returns as: %d, expected: %d\n", cc, 4);
 	testTotal++;
-	if(cc == 6) 
+	if(cc == 4) 
 	{
 		printf("PASSED\n");
 		passCount++;
@@ -247,7 +215,7 @@ int main() {
 
 
 	//TEST SUMMARY:
-	printf("\n****CARD UNIT TEST 2: PASSED %d of %d tests****\n", passCount, testTotal);
+	printf("\n****CARD UNIT TEST 3: PASSED %d of %d tests****\n", passCount, testTotal);
 
 
 
