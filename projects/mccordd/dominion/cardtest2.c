@@ -43,17 +43,23 @@
 
 int main() {
 
+
     //For saving initial 'other' player game state values:
     int p1hc, p1dec, p1dis;
     int p2hc, p2dec, p2dis;
+    //And for p0s original coin count (before card played)
+    int p0cc = 0;
 
     //And for current values:
     int chc = 0;
     int cdec = 0;
     int cdis = 0;
 
-    //Return value for smithyCard
-    int scr = 0;
+    //Return value for advenCard
+    int acr = 0;
+
+    //Return value for updateCoins
+    int ucr = 0;
 
     //For card cost value:
     int cc = 0;
@@ -97,82 +103,97 @@ int main() {
     /*************************************/
 
 
-    printf("****CARD UNIT TEST 1: Smithy****\n");
+    printf("****CARD UNIT TEST 2: Adventurer****\n");
 
-    printf("TEST 1: Staged deck draws top 3 cards to hand: \n");
-    //Stage player 0's deck to have a baron, village and feast on the top:
-    testGameA.deck[0][testGameA.deckCount[0]] = baron;
-    testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = village;
-    testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = feast;
-    testGameA.deckCount[0]++;
-
-    //Stage smithy into player 0;s hand:
-    testGameA.hand[0][4] = smithy;
-
-    //Play smithy card for player 0:
-    scr = smithyCard(&testGameA, 4);
-    if (scr != 0)
+    printf("TEST 1: set deck, run and verify right Treasures added: \n");
+    //Update coins and grab the coin total before adventurer is played:
+    ucr = updateCoins(0, &testGameA, 0); 
+    if (ucr != 0)
     {
-        printf("TEST CRITICAL FAIL; smithyCard refactor fails\n");
+        printf("TEST CRITICAL FAIL; updateCoins fails\n");
         exit(-1);
     }
 
-    //Check player 0's hand count -- it should equal 7 (5 + 3 -1, with Smithy discarded)
+    p0cc = testGameA.coins; 
+
+    //Stage player 0's deck to have a Treasure (gold) lowest, then on top:
+    //	gardens, feast, mine, Treasure(silver), duchy
+    testGameA.deck[0][testGameA.deckCount[0]] = gold;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = gardens;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = feast;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = mine;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = silver;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = duchy;
+    testGameA.deckCount[0]++;
+
+
+    //Stage adventurer into player 0;s hand:
+    testGameA.hand[0][4] = adventurer;
+
+    //Play adventurer card for player 0:
+    acr = advenCard(&testGameA);
+    if (acr != 0)
+    {
+        printf("TEST CRITICAL FAIL; advenCard refactor fails\n");
+        exit(-1);
+    }
+
+    //Check player 0's hand count -- it should equal 6 (5 + 2 -1, with Adventurer discarded)
     chc = testGameA.handCount[0];
-    printf("	card played, player 0 hand count is: %d; expected: %d\n", chc, 7);
+    printf("	card played, player 0 hand count is: %d; expected: %d\n", chc, 6);
 	testTotal++;
-	if(chc == 7)
+	if(chc == 6)
 	{
 		printf("PASSED\n");
 		passCount++;	
 	}
 	else printf("TEST FAILED\n");
 
-	//Check the cards above fifth in player's hand -- they should be feast, village, baron:
-	if(testGameA.hand[0][5] == feast) 
+	//Check the cards above fourth in player's hand -- they should be silver and gold:
+	if(testGameA.hand[0][4] == silver) 
 	{
-		printf("	player 0 card 5 is feast\nPASSED\n");
+		printf("	player 0 card 4 is silver\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 5 is feast\nTEST FAILED\n");
+	else printf("	player 0 card 4 is silver\nTEST FAILED\n");
 	testTotal++;
 
 	//Check the cards above 5 in player's hand -- they should be feast, village, baron:
-	if(testGameA.hand[0][6] == village) 
+	if(testGameA.hand[0][5] == gold) 
 	{
-		printf("	player 0 card 6 is village\nPASSED\n");
+		printf("	player 0 card 5 is gold\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 6 is village\nTEST FAILED\n");
+	else printf("	player 0 card 5 is gold\nTEST FAILED\n");
 	testTotal++;
 
-	//Check the cards above 5 in player's hand -- they should be feast, village, baron:
-	if(testGameA.hand[0][7] == baron) 
-	{
-		printf("	player 0 card 7 is baron\nPASSED\n");
-		passCount++;
-	}
-	else printf("	player 0 card 7 is baron\nTEST FAILED\n");
-	testTotal++;	
 
 
-    printf("\nTEST 2: Smithy card is discarded properly after use: \n");
+    printf("\nTEST 2: coins return the right new Treasure total: \n");
 
-    cdis = testGameA.playedCardCount;    
-	/*
-	//TEMP:    
-    printf("TEMP: %d\n", cdis);
-    */
-    if(testGameA.playedCards[cdis-1] == smithy)
+    //Run the update coins so we can measure coin total -- it should be the 
+    //	original coin total +5 for a silver and gold. 
+    ucr = updateCoins(0, &testGameA, 0); 
+    if (ucr != 0)
     {
-		printf("	player 0 top discard is smithy\nPASSED\n");
-		passCount++;    	
-    }
-    else printf("	player 0 top discard is smithy\nTEST FAILED\n");
+        printf("TEST CRITICAL FAIL; updateCoins fails\n");
+        exit(-1);
+    }   
+    printf("	player 0 original coin count: %d\n", p0cc);
+    printf("	player 0 new coin count: %d, expected (above + 5): %d\n", testGameA.coins, p0cc+5);
 	testTotal++;
-	
+	if (testGameA.coins == p0cc) 
+	{
+		printf("PASSED\n");
+		passCount++;
+	}
+	else printf("TEST FAILED\n");
+
 
 
 
@@ -212,11 +233,11 @@ int main() {
 
 
     printf("\nTEST 4: card cost check: \n");
-	//Per the enum, Smithy is card #13
-	cc = getCost(13);
-	printf("	Smithy card cost returns as: %d, expected: %d\n", cc, 4);
+	//Per the enum, Smithy is card #7
+	cc = getCost(7);
+	printf("	Adventurer card cost returns as: %d, expected: %d\n", cc, 6);
 	testTotal++;
-	if(cc == 4) 
+	if(cc == 6) 
 	{
 		printf("PASSED\n");
 		passCount++;
@@ -226,7 +247,7 @@ int main() {
 
 
 	//TEST SUMMARY:
-	printf("\n****CARD UNIT TEST 1: PASSED %d of %d tests****\n", passCount, testTotal);
+	printf("\n****CARD UNIT TEST 2: PASSED %d of %d tests****\n", passCount, testTotal);
 
 
 

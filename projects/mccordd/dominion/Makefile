@@ -30,7 +30,7 @@ runtests: testDrawCard
 	cat dominion.c.gcov >> unittestresult.out
 
 unittestresults.out: unittest1.c unittest2.c dominion.c rngs.c
-	echo "FUNCTION UNIT TEST RESULTS:" > unittestresults.out
+	echo "**********FUNCTION UNIT TEST RESULTS**********" > unittestresults.out
 
 	echo "unittest1.c:" >> unittestresults.out
 	gcc -o unittest1 dominion.c rngs.c unittest1.c $(CFLAGS)
@@ -52,8 +52,21 @@ unittestresults.out: unittest1.c unittest2.c dominion.c rngs.c
 	./unittest4 >> unittestresults.out
 	gcov dominion.c >> unittestresults.out
 
-dkm: cardtest1.c dominion.c rngs.c
-	gcc -o dkm dominion.c rngs.c cardtest1.c $(CFLAGS)
+	echo "**********CARD UNIT TEST RESULTS**********" >> unittestresults.out
+
+	echo "cardtest1.c:" >> unittestresults.out
+	gcc -o cardtest1 dominion.c rngs.c cardtest1.c $(CFLAGS)
+	./cardtest1 >> unittestresults.out
+	gcov dominion.c >> unittestresults.out
+
+	echo "cardtest2.c:" >> unittestresults.out
+	gcc -o cardtest2 dominion.c rngs.c cardtest2.c $(CFLAGS)
+	./cardtest2 >> unittestresults.out
+	gcov dominion.c >> unittestresults.out
+
+
+dkm: cardtest3.c dominion.c rngs.c
+	gcc -o dkm dominion.c rngs.c cardtest3.c $(CFLAGS)
 
 player: player.c interface.o
 	gcc -o player player.c -g  dominion.o rngs.o interface.o $(CFLAGS)
