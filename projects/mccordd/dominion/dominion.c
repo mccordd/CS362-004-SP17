@@ -617,7 +617,7 @@ int advenCard(struct gameState *state) {
 		drawCard(currentPlayer, state);
 
 		//The most recently drawn card is the top
-		cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]];
+		cardDrawn = state->hand[currentPlayer][state->handCount[currentPlayer]-1];
 
 		//Increment if a treasure drawn, else draw on
 		if (cardDrawn == copper || cardDrawn == silver || cardDrawn == gold)
