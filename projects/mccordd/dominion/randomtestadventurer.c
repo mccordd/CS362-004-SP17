@@ -118,14 +118,14 @@ int main () {
     TestState.hand[TestState.whoseTurn][y] = 7;
 
     /*Make sure the counts contain values -- SEE NOTES -- due to added bugs*/
-    TestState.deckCount[TestState.whoseTurn] = (floor(Random() * MAX_DECK));
+    TestState.deckCount[TestState.whoseTurn] = (floor(Random() * MAX_HAND));
     //printf("Test #%d: deckCount is: %d\n", n+1, TestState.deckCount[TestState.whoseTurn]); 
     for (i=0; i<TestState.deckCount[TestState.whoseTurn]; i++)
     {
         z= floor(Random() *27);
         TestState.deck[TestState.whoseTurn][i] = z;
     }
-    TestState.discardCount[TestState.whoseTurn] = (floor(Random() * MAX_DECK));
+    TestState.discardCount[TestState.whoseTurn] = (floor(Random() * MAX_HAND));
     //printf("Test #%d: discardCount is: %d\n", n+1, TestState.discardCount[TestState.whoseTurn]); 
     for (i=0; i<TestState.discardCount[TestState.whoseTurn]; i++)
     {
@@ -159,8 +159,9 @@ int main () {
 
 
 
-    /*HARD-CODED VALUES TEST:*/
-/*    
+    /*HARD-CODED VALUES TEST: safe-ranged, not 'interesting'*/
+    /*
+    
     TestState.numPlayers = 3;
     TestState.supplyCount[treasure_map+1];
     TestState.outpostPlayed = 0;
@@ -227,7 +228,8 @@ int main () {
     TestState.discard[2][1] = 0;
     TestState.discard[2][2] = 0;
    
-    TestState.playedCardCount = 0; */
+    TestState.playedCardCount = 0; 
+    */
 
     /*Run the advenCardTester with randomized state:*/
     testsPassed += advenCardTester(&TestState);
