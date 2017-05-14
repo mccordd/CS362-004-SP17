@@ -50,20 +50,24 @@
 
 
 
-int smithyCardTester(struct gameState *t, int hp) {
+int remodelCardTester(int c1, int c2, struct gameState *t, int hp) {
 
-  /*Return value for smithyCard and card count for comparison:*/
-  int scR, cardC;
+  /*Return value for smithyCard, card count for comparison*/
+  int rcR, cardC;
 
   cardC = t->handCount[t->whoseTurn];
     
-  scR = smithyCard (t, hp);
+  rcR = remodelCard (c1, c2, t, hp);
 
  /*Oracle tests:
-    Return -1 for a fail, for the wrong card count after smith, which 
-        should be the original +2 (3 added, one discarded)
+    Return -1 for a fail, for the wrong card count after remodel, which 
+        should be the same (1 added, 1 discarded), and, if c2 (acquire)
+        cost +2 is not <= c1 (discard) cost, it should return -1, else (valid 
+        exchange) it should return 0.
     */
-  if(scR != 0 || t->handCount[t->whoseTurn] != cardC + 2) return -1;
+
+  if (cardC != t->handCount[t->whoseTurn]) return -1;
+  if (rcR != 0 && getCost(c2) +2 > getCost(c1)) return -1;
 
   return 0;
 }
@@ -71,14 +75,15 @@ int smithyCardTester(struct gameState *t, int hp) {
 
 int main () {
 
-  /*i for iterator, n for number of tests, p for players, x y z for random variables*/
-  int i, n, p, x, y;
+  /*i for iterator, n for number of tests; p, q, x, y and z are values we need to preserve
+  	temporarily*/
+  int i, n, p, q, x, y, z;
   int testsPassed = TESTS;
 
   struct gameState TestState;
 
-  printf ("*************RANDOM TEST CARD 1*************\n");
-  printf ("Testing Smithy Card:\n");
+  printf ("*************RANDOM TEST CARD 2*************\n");
+  printf ("Testing Remodel Card:\n");
 
   /*SelectStream is a function in rngs.c to change between up to 256 streams of 
   random numbers, with PutSeed to set the seed*/
@@ -91,8 +96,9 @@ int main () {
       ((char*)&TestState)[i] = floor(Random()*256);
     }
 
-    /*Values needed specifically for Smithy -- SEE NOTES*/
+    /*Values needed specifically for Remodel -- SEE NOTES*/
     TestState.playedCardCount = 0;
+    for (i=0; i<27; i++) TestState.supplyCount[i] = 1000;
 
     /*Pick number of players, and within this pick whose turn*/
     p = floor(Random() * MAX_PLAYERS);
@@ -104,12 +110,17 @@ int main () {
 
     /*Hard to add limits to card values -- SEE NOTES*/
     x = floor(Random() * MAX_HAND);
+
+    /*Had to add this specifically due to my remodel bug -- SEE NOTES*/
+    if (x < 3) x = 3;
+
     TestState.handCount[TestState.whoseTurn] = x;   
 
-    /*Now add a smithy card in a random, but possible spot*/
+    /*Now add a remodel card in a random, but possible spot*/
     //printf("Test #%d: handCount is: %d\n", n+1, TestState.handCount[TestState.whoseTurn]);
     y = floor(Random() * x);
-    TestState.hand[TestState.whoseTurn][y] = 13;
+    TestState.hand[TestState.whoseTurn][y] = 12;
+    //printf("Value %d is at position %d\n", 12, y);
 
     /*Make sure the counts contain values -- SEE NOTES -- due to added bugs*/
     TestState.deckCount[TestState.whoseTurn] = (floor(Random() * MAX_DECK));
@@ -118,9 +129,33 @@ int main () {
     TestState.discardCount[TestState.whoseTurn] = (floor(Random() * MAX_DECK));
     //printf("Test #%d: discardCount is: %d\n", n+1, TestState.discardCount[TestState.whoseTurn]); 
 
-    /*Run the smithyCardTester with randomized state:*/
-    testsPassed += smithyCardTester(&TestState, y);
-  }
+    /*Getting choice to trash (x) and choice to buy (z) -- we'll validate in the tester for value*/
+    x = floor(Random() * 27);
+    z = floor(Random() * 27);
+
+    p = floor(Random() * TestState.handCount[TestState.whoseTurn]);
+    if(p!=y){TestState.hand[TestState.whoseTurn][p] = x;}
+    else{
+    	while(p==y) p = floor(Random() * TestState.handCount[TestState.whoseTurn]);
+    	TestState.hand[TestState.whoseTurn][p] = x;
+    }
+    //printf("Value %d is at position %d\n", x, p);
+
+    /*SEE NOTES -- due to a bug, both cards are forced to be a player's hand, even 
+    	though this is an unrealistic condition*/
+   
+    q = floor(Random() * TestState.handCount[TestState.whoseTurn]);
+    if(q!=y && q!=x){TestState.hand[TestState.whoseTurn][q] = z;}
+    else{
+    	while(q==y || q==x) q = floor(Random() * TestState.handCount[TestState.whoseTurn]);
+    	TestState.hand[TestState.whoseTurn][q] = z;
+    }
+    //printf("Value %d is at position %d\n", z, q);
+  
+
+    /*Run the remodelCardTester with randomized state:*/
+    testsPassed += remodelCardTester(p, q, &TestState, y);
+	}	
 
   printf ("Passed %d of %d random card tests\n", testsPassed, TESTS); 
 

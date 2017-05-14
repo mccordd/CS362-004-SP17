@@ -32,9 +32,19 @@ runtests: testDrawCard
 randomtestcards.out: randomtestcard1.c dominion.c rngs.c
 	echo "********************RANDOM CARD TEST RESULTS********************" > randomtestcardresults.out
 
+	echo "randomtestadventurer.c:" >> randomtestcardresults.out
+	gcc -o randomtestadventurer dominion.c rngs.c randomtestadventurer.c $(CFLAGS)
+	./randomtestadventurer >> randomtestcardresults.out
+	gcov dominion.c >> randomtestcardresults.out
+
 	echo "randomtestcard1.c:" >> randomtestcardresults.out
 	gcc -o randomtestcard1 dominion.c rngs.c randomtestcard1.c $(CFLAGS)
 	./randomtestcard1 >> randomtestcardresults.out
+	gcov dominion.c >> randomtestcardresults.out
+
+	echo "randomtestcard2.c:" >> randomtestcardresults.out
+	gcc -o randomtestcard2 dominion.c rngs.c randomtestcard2.c $(CFLAGS)
+	./randomtestcard2 >> randomtestcardresults.out
 	gcov dominion.c >> randomtestcardresults.out
 
 
