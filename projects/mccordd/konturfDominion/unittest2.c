@@ -1,362 +1,209 @@
-/******************************************************************************
- * Filename:     unittest2.c
- * Author:       Fred Kontur
- * Date Written: April 22, 2016
- * Last Edited:  April 22, 2016
- * Description:  This file contains a unit test for the initializeGame() 
- *               function in dominion.c
- * Business Requirements for initializeGame():
- * 1. initializeGame() should set up a game state for the start of the game
- *    according to the standard Dominion rules. This includes
- *    a) Supply with the proper number of Treasure, Victory, Curse, and Kingdom
- *       cards based on the number of players in the game.
- *    b) Each player has 10 cards - 7 coppers and 3 estates. 5 of the cards
- *       are in each of the players' hands and 5 are in each of the players'
- *       decks.
- * 2. initializeGame() should check that valid game variables have been passed
- *    to it, including a valid number of players and a valid set of kingdom
- *    cards.
-******************************************************************************/
+/**************************************************************************************
+    Name: Doug McCord
+    Date: 4/28/17
+    Project: CS 362 Assignment 3
+    Description: 
+    "1- Write unit tests for four functions (not card implementations, and not 
+        cardEffect) in dominion.c. Check these tests in as unittest1.c,unittest2.c, 
+        unittest3.c, and unittest4.c. At least two of these functions should be more 
+        than 5 lines of code. (20 points)
+     2- Write unit tests for four Dominion cards implemented in dominion.c. These tests 
+        should be checked in as cardtest1.c, cardtest2.c, cardtest3.c, and cardtest4.c. 
+        It is mandatory to test smithy and adventurer card. (20 points)"
+
+    Add a written report as specified, and also the makefile must do the following:
+
+    "Add a rule in Makefile that will generate and execute all of these tests, and 
+     append complete testing results (including % coverage) into a file called 
+     unittestresults.out. The rule should be named unittestresults.out and should 
+     depend on all your test code as well as the dominion code. The .out files contain 
+     the output of your running tests and coverage information. Basically .out file 
+     should act as a proof that your tests run correctly and you collected coverage 
+     information correctly. (10 points)"
+
+    SOURCES: 
+        *CS 362 course lecture material, Piazza help boards and provided sample code
+            including bst.zip, testUpdateCoins.c and cardtest4.c
+        *Other sources:
+        	For creating an array of strings in C (refresher):
+        	http://stackoverflow.com/questions/1088622/how-do-i-create-an-array-of-strings-in-c
+
+***************************************************************************************/
+
+
+
 #include "dominion.h"
+#include "dominion_helpers.h"
+#include "rngs.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-int compare3(const void* a, const void* b) {
-   if(*(int*)a > *(int*)b) {
-      return 1;
-   }
-   else if(*(int*)a < *(int*)b) {
-      return -1;
-   }
-   else {
-      return 0;
-   }
-}
 
-// Returns 1 if the game is in a valid starting state, 0 if not
-int checkGameStart(struct gameState state, int *k) {
-   int i, j = 0, res = 1, numVict, numCopper, numEstate; 
-   int numPlayer = state.numPlayers;
 
-   numVict = ((numPlayer == 2) ? 8 : 12);
+int main() {
 
-   // Sort the kingdom cards to make them easier to compare to the supply
-   qsort((void*)k, 10, sizeof(int), compare3);
+	//Iterators:
+    int i;
 
-   if((numPlayer < 2) || (numPlayer > 4)) {
-      printf("Invalid number of players: %d\n", numPlayer);
-      return 0;
-   }
+    //For our supply count return
+    int spc = 0;
+    //For our expected supply pile
+    int spe = 0;
 
-   // Check to make sure the supply has the right number and
-   // types of cards
-   if(state.supplyCount[curse] != ((10 * numPlayer) - 10)) {
-      printf("Invalid number of curse cards ");
-      printf("in supply: %d\n", state.supplyCount[curse]);
-      res = 0; 
-   }
-   if(state.supplyCount[copper] != ((60 - (7 * numPlayer)))) {
-      printf("Invalid number of copper cards ");
-      printf("in supply: %d\n", state.supplyCount[copper]);
-      res = 0;
-   }
-   if(state.supplyCount[silver] != 40) {
-      printf("Invalid number of silver cards ");
-      printf("in supply: %d\n", state.supplyCount[silver]);
-      res = 0;
-   }
-   if(state.supplyCount[gold] != 30) {
-      printf("Invalid number of gold cards ");
-      printf("in supply: %d\n", state.supplyCount[gold]);
-      res = 0;
-   }
-   if(state.supplyCount[estate] != numVict) {
-      printf("Invalid number of estate cards ");
-      printf("in supply: %d\n", state.supplyCount[estate]);
-      res = 0;
-   }
-   if(state.supplyCount[duchy] != numVict) {
-      printf("Invalid number of duchy cards ");
-      printf("in supply: %d\n", state.supplyCount[duchy]);
-      res = 0;
-   }
-   if(state.supplyCount[province] != numVict) {
-      printf("Invalid number of province cards ");
-      printf("in supply: %d\n", state.supplyCount[province]);
-      res = 0;
-   }
-   for(i = adventurer; i <= treasure_map; i++) {
-      if((j < 10) && (k[j] == i)) {
-         if((i == gardens) || (i == great_hall)) {
-            if(state.supplyCount[i] != numVict) {
-               printf("Invalid number of card #%d ", i);
-               printf("in supply: %d\n", state.supplyCount[i]);
-               res = 0;
-            }
-         }
-         else {
-            if(state.supplyCount[i] != 10) {
-               printf("Invalid number of card #%d ", i);
-               printf("in supply: %d\n", state.supplyCount[i]);
-               res = 0;
-            }
-         }
-         j++;
-      }
-      else {
-         if(state.supplyCount[i] > 0) {
-            printf("Card #%d is in supply but should not be\n", i);
-            res = 0;
-         }
-      }
-   }
+    //Test pass count
+    int passCount = 0;
+    int testTotal = 0;
 
-   // Check the players' hands and decks to make sure they have the
-   // right number and types of cards
-   for(i = 0; i < numPlayer; i++) {
-      numCopper = numEstate = 0;
-      if(state.handCount[i] != 5) {
-         printf("Every player should have 5 cards in their hand ");
-         printf("at the start of the game\n");
-         printf("The hand of Player %d has %d cards ", i, state.handCount[i]);
-         printf("rather than 5\n");
-         res = 0;
-      }
-      if(state.deckCount[i] != 5) {
-         printf("Every player should have 5 cards in their deck ");
-         printf("at the start of the game\n");
-         printf("The deck of Player %d has %d cards ", i, state.handCount[i]);
-         printf("rather than 5\n");
-         res = 0;
-      }
-      for(j = 0; j < state.handCount[i]; j++) {
-         if(state.hand[i][j] == copper) {
-            numCopper++;
-         }
-         else if(state.hand[i][j] == estate) {
-            numEstate++;
-         } 
-      }
-      for(j = 0; j < state.deckCount[i]; j++) {
-         if(state.deck[i][j] == copper) {
-            numCopper++;
-         }
-         else if(state.deck[i][j] == estate) {
-            numEstate++;
-         }
-      }
-      if(numCopper != 7) {
-         printf("Player %d has %d copper cards rather than 7\n", i, numCopper);
-         res = 0;
-      }
-      if(numEstate != 3) {
-         printf("Player %d has %d estate cards rather than 3\n", i, numEstate);
-         res = 0;
-      }
-   }
+    /****Needed to call initialize game****/
+    //Game return state
+    int g;
 
-   // Make sure first player's turn is set up
-   if(state.whoseTurn != 0) {
-      printf("Invalid player starting the game: %d\n", state.whoseTurn);
-      res = 0;
-   }
-   if(state.outpostPlayed != 0) {
-      printf("Outpost played is %d rather than 0\n", state.outpostPlayed);
-      res = 0;
-   }
-   if(state.phase != 0) {
-      printf("Phase is %d rather than 0\n", state.phase);
-      res = 0;
-   }
-   if(state.numActions != 1) {
-      printf("Number of actions available for starting player is ");
-      printf("%d rather than 1\n", state.numActions);
-      res = 0;
-   }
-   if(state.numBuys != 1) {
-      printf("Number of buys available for starting player is ");
-      printf("%d rather than 1\n", state.numBuys);
-      res = 0;
-   }
-   if(state.playedCardCount != 0) {
-      printf("Number of played cards is %d ", state.playedCardCount);
-      printf("rather than 0\n");
-      res = 0;
-   }
+    //Starting with 3 players in test
+    int pNum = 3; 
+    //Our selection of Kingdom Cards, kept from provided test of updateCoins
+    int k[10] = {adventurer, council_room, feast, gardens, mine
+               , remodel, smithy, village, baron, great_hall};
 
-   return res;
-}
+    //A default value
+    int testSeed = 1000; 
 
-void testInitializeGame() {
-   int numPlayer, res, seed = 123456;
-   struct gameState state;
-   int kNoVictory[] = {minion, sea_hag, cutpurse, ambassador, steward,
-                       adventurer, smithy, tribute, baron, salvager};
-   int kVictory[] = {treasure_map, smithy, gardens, ambassador, sea_hag,
-                     feast, great_hall, cutpurse, tribute, adventurer};
-   int kIncorrect[] = {gardens, cutpurse, steward, remodel, mine,
-                       baron, steward, adventurer, salvager, minion};
+    //Our gameState
+    struct gameState testGameA;
 
-   printf("\n***********Tests for initializeGame() function*************\n");
+    //For retrieving our enum titles: 
+    const char *cards[27];
+    cards[0] = "curse";
+    cards[1] = "estate";
+    cards[2] = "duchy";
+    cards[3] = "province";
+    cards[4] = "copper";
+    cards[5] = "silver";
+    cards[6] = "gold";
+    cards[7] = "adventurer";
+    cards[8] = "council_room";
+    cards[9] = "feast";
+    cards[10] = "gardens";
+    cards[11] = "mine";
+    cards[12] = "remodel";
+    cards[13] = "smithy";
+    cards[14] = "village";
+    cards[15] = "baron";
+    cards[16] = "great_hall";
+    cards[17] = "minion";
+    cards[18] = "steward";
+    cards[19] = "tribue";
+    cards[20] = "ambassador";
+    cards[21] = "cutpurse";
+    cards[22] = "embargo";
+    cards[23] = "outpost";
+    cards[24] = "salvager";
+    cards[25] = "sea_hag";
+    cards[26] = "teasure_map";
 
-   // Send initializeGame() too few players
-   numPlayer = 1;
-   res = initializeGame(numPlayer, kNoVictory, seed, &state);
-   if(res == -1) {
-      printf("Correct result for too few players.\n");
-   }
+    /*************************************/
+    g = initializeGame (pNum, k, testSeed, &testGameA);
+    if (g != 0)
+    {
+        printf("TEST CRITICAL FAIL; game does not intiialize\n");
+        exit(-1);
+    }    
+    /*************************************/
 
-   // Send initializeGame() too many players
-   numPlayer = MAX_PLAYERS + 1;
-   res = initializeGame(numPlayer, kNoVictory, seed, &state);
-   if(res == -1) {
-      printf("Correct result for too many players.\n");
-   }
 
-   // Test initializeGame() with duplicate kingdom cards
-   numPlayer = 2;
-   res = initializeGame(numPlayer, kIncorrect, seed, &state);
-   if(res == -1) {
-      printf("Correct result for duplicate kingdom cards.\n");
-   }
-   
-   // Test initializeGame() with 2 players
-   numPlayer = 2;
-   res = initializeGame(numPlayer, kNoVictory, seed, &state);
-   if(res == -1) {
-      printf("###Incorrect result for 2 players and kingdom deck with ");
-      printf("no victory cards.\n");
-   }
-   else {
-      if(state.numPlayers != numPlayer) {
-         printf("###Incorrect result - %d players ", state.numPlayers);
-         printf("rather than %d players.\n", numPlayer);
-      }
-      else {
-         res = checkGameStart(state, kNoVictory);
-         if(res == 0) {
-            printf("###Incorrect result for 2 players and kingdom deck with ");
-            printf("no victory cards. See description above.\n");
-         }
-         else {
-            printf("Correct result for 2 players and kingdom deck with ");
-            printf("no victory cards.\n");
-         }
-      }
-   }
-   res = initializeGame(numPlayer, kVictory, seed, &state);
-   if(res == -1) {
-      printf("###Incorrect result for 2 players and kingdom deck with ");
-      printf("victory cards.");
-   }
-   else {
-      if(state.numPlayers != numPlayer) {
-         printf("###Incorrect result - %d players ", state.numPlayers);
-         printf("rather than %d players.\n", numPlayer);
-      }
-      else {
-         res = checkGameStart(state, kVictory);
-         if(res == 0) {
-            printf("###Incorrect result for 2 players and kingdom deck with ");
-            printf("victory cards. See description above.\n");
-         }
-         else {
-            printf("Correct result for 2 players and kingdom deck with ");
-            printf("no victory cards.\n");
-         }
-      }
-   }
-   // Test initializeGame() with 3 players
-   numPlayer = 3;
-   res = initializeGame(numPlayer, kNoVictory, seed, &state);
-   if(res == -1) {
-      printf("###Incorrect result for 3 players and kingdom deck with ");
-      printf("no victory cards.");
-   }
-   else {
-      if(state.numPlayers != numPlayer) {
-         printf("###Incorrect result - %d players ", state.numPlayers);
-         printf("rather than %d players.\n", numPlayer);
-      }
-      else {
-         res = checkGameStart(state, kNoVictory);
-         if(res == 0) {
-            printf("###Incorrect result for 3 players and kingdom deck with ");
-            printf("no victory cards. See description above.\n");
-         }
-         else {
-            printf("Correct result for 3 players and kingdom deck with ");
-            printf("no victory cards.\n");
-         }
-      }
-   }
-   res = initializeGame(numPlayer, kVictory, seed, &state);
-   if(res == -1) {
-      printf("###Incorrect result for 3 players and kingdom deck with ");
-      printf("victory cards.\n");
-   }
-   else {
-      if(state.numPlayers != numPlayer) {
-         printf("###Incorrect result - %d players ", state.numPlayers);
-         printf("rather than %d players.\n", numPlayer);
-      }
-      else {
-         res = checkGameStart(state, kVictory);
-         if(res == 0) {
-            printf("###Incorrect result for 3 players and kingdom deck with ");
-            printf("victory cards. See description above.\n");
-         }
-         else {
-            printf("Correct result for 3 players and kingdom deck with ");
-            printf("vicotry cards.\n");
-         }
-      }
-   }
-   // Test initializeGame() with 4 players
-   numPlayer = 4;
-   res = initializeGame(numPlayer, kNoVictory, seed, &state);
-   if(res == -1) {
-      printf("###Incorrect result for 4 players and kingdom deck with ");
-      printf("no victory cards.");
-   }
-   else {
-      if(state.numPlayers != numPlayer) {
-         printf("###Incorrect result - %d players ", state.numPlayers);
-         printf("rather than %d players.\n", numPlayer);
-      }
-      else {
-         res = checkGameStart(state, kNoVictory);
-         if(res == 0) {
-            printf("###Incorrect result for 4 players and kingdom deck with ");
-            printf("no victory cards. See description above.\n");
-         }
-         else {
-            printf("Correct result for 4 players and kingdom deck with ");
-            printf("no victory cards.\n");
-         }
-      }
-   }
-   res = initializeGame(numPlayer, kVictory, seed, &state);
-   if(res == -1) {
-      printf("###Incorrect result for 4 players and kingdom deck with ");
-      printf("victory cards.\n");
-   }
-   else {
-      if(state.numPlayers != numPlayer) {
-         printf("###Incorrect result - %d players ", state.numPlayers);
-         printf("rather than %d players.\n", numPlayer);
-      }
-      else {
-         res = checkGameStart(state, kVictory);
-         if(res == 0) {
-            printf("###Incorrect result for 4 players and kingdom deck with ");
-            printf("victory cards. See description above.\n");
-         }
-         else {
-            printf("Correct result for 4 players and kingdom deck with ");
-            printf("vicotry cards.\n");
-         }
-      }
-   }
+    printf("****FUNCTION UNIT TEST 2: supplyCount****\n");
+
+
+	printf("TEST 1: intialized game supply counts for 3 players: \n");
+
+    //NOTE: 27 comes from the enum values of the tested game. There are 27 possible cards, 
+    //	but we are initializing kingdom cards only through great_hall, or 16. Hence all 
+    //	that are out of the game, and hence should register a -1. 
+
+    //First check for kingdom cards in play, victory, curse and Treasure cards:
+	for (i = 0; i < 17; i++)
+	{
+		spc = supplyCount(i, &testGameA);
+
+		//Curses for 3 players:
+		if(i == 0) spe = 20;
+
+		//Victory cards: 
+		else if(i < 4) spe = 12;
+
+		//Treasure cards copper, silver, gold:
+		else if(i == 4) spe = 39; //60 - 7 per 3 players in this test
+		else if(i == 5) spe = 40;
+		else if(i == 6) spe = 30;
+
+		//Victory type Kingdom cards:
+		else if (i == 10) spe = 12;
+		else if (i == 16) spe = 12;
+
+		//Other in-game Kingdom cards
+		else spe = 10; 
+
+		printf("	Card %s supply pile is: %d; expected: %d\n", cards[i], spc, spe); 
+
+		testTotal++;
+
+		if(spc == spe) 
+		{
+			//printf("PASSED\n");
+			passCount ++;
+		}
+		//else printf("TEST FAILED\n");
+	}
+
+	//Now check for kingdom cards that are out of play:
+	spe = -1;
+
+	for (i = 17; i < 27; i++)
+	{
+		spc = supplyCount(i, &testGameA);
+		printf("	Card %s supply pile is: %d; expected: %d\n", cards[i], spc, spe); 
+
+		testTotal++;
+
+		if(spc == spe) 
+		{
+			//printf("PASSED\n");
+			passCount ++;
+		}
+		//else printf("TEST FAILED\n");
+	}
+
+	printf("\nTEST 2: mod and check depleted game supply count: \n");
+
+	//Assign player 3 all of the remaining province cards to his deck:
+	//	First, ensure there are the correct 12 province cards in supply:
+	spc = supplyCount(3, &testGameA);
+
+	if (spc == 12)
+	{
+			for (i = 0; i < spc; i++)
+			{
+				testGameA.deck[3][i+10] = province;
+				testGameA.deckCount[3] = testGameA.deckCount[3] + 1;
+				testGameA.supplyCount[3]--;
+				printf("	Player 3 adds %s; count is: %d\n", cards[3], testGameA.supplyCount[3]);
+			}
+
+		//Now get the count after and check it:
+		spc = supplyCount(3, &testGameA); 
+		spe = 0;
+		printf("	Card %s supply pile is: %d; expected: %d\n", cards[3], spc, spe);
+		if(spc == spe) passCount++;
+	}
+	
+	testTotal++;
+
+
+
+	//TEST SUMMARY:
+	printf("\n****FUNCTION UNIT TEST 2: PASSED %d of %d tests****\n", passCount, testTotal);
+
+
+	return 0;
 }

@@ -1,351 +1,255 @@
-/******************************************************************************
- * Filename:     cardtest2.c
- * Author:       Fred Kontur
- * Date Written: April 23, 2016
- * Last Edited:  April 29, 2016
- * Description:  This file contains a unit test for the Adventurer card 
- *               in dominion.c
- * Business Requirements for Adventurer:
- * 1. The player uses an action to draw cards from the deck until 2 Treasure 
- *    cards are found. The following caveats apply -
- *    a) The Treasure cards are placed in the player's hand while all 
- *       non-Treasure cards that are found are discarded.
- *    b) If it is necessary to shuffle in the middle, then the player should
- *       do so.
- *    c) If the player runs out of cards and still only has one treasure, then
- *       the player only gets one treasure.
- * 2. Nothing else changes in the game state except what is required to 
- *    accomplish the above actions. 
- * 3. If the player does not have actions available, then he/she cannot use
- *    the card.
-******************************************************************************/
+/**************************************************************************************
+    Name: Doug McCord
+    Date: 4/28/17
+    Project: CS 362 Assignment 3
+    Description: 
+    "1- Write unit tests for four functions (not card implementations, and not 
+        cardEffect) in dominion.c. Check these tests in as unittest1.c,unittest2.c, 
+        unittest3.c, and unittest4.c. At least two of these functions should be more 
+        than 5 lines of code. (20 points)
+     2- Write unit tests for four Dominion cards implemented in dominion.c. These tests 
+        should be checked in as cardtest1.c, cardtest2.c, cardtest3.c, and cardtest4.c. 
+        It is mandatory to test smithy and adventurer card. (20 points)"
+
+    Add a written report as specified, and also the makefile must do the following:
+
+    "Add a rule in Makefile that will generate and execute all of these tests, and 
+     append complete testing results (including % coverage) into a file called 
+     unittestresults.out. The rule should be named unittestresults.out and should 
+     depend on all your test code as well as the dominion code. The .out files contain 
+     the output of your running tests and coverage information. Basically .out file 
+     should act as a proof that your tests run correctly and you collected coverage 
+     information correctly. (10 points)"
+
+    SOURCES: 
+        *CS 362 course lecture material, Piazza help boards and provided sample code
+            including bst.zip, testUpdateCoins.c and cardtest4.c
+        *Other sources:
+        	For creating an array of strings in C (refresher):
+        	http://stackoverflow.com/questions/1088622/how-do-i-create-an-array-of-strings-in-c
+
+***************************************************************************************/
+
+
+
 #include "dominion.h"
+#include "dominion_helpers.h"
+#include "rngs.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
-#define TEST_NUM_PLAYERS 3
-#define TEST_PLAYER 0
 
-// Returns 1 if decks are the same, 0 if different
-int compDecks5(int* arr1, int* arr2, int deckSize) {
-   int i;
 
-   for(i = 0; i < deckSize; i++) {
-      if(arr1[i] != arr2[i]) {
-         return 0;
-      }
-   }
+int main() {
 
-   return 1;
-}
 
-// This function compares 2 game states with the exception of the current 
-// player's hand, deck, played cards, and discard pile and the corresponding 
-// counts. It also does not compare numActions and coins. It returns 1 if the 
-// states are the same, 0 if different.
-int compStates5(struct gameState s1, struct gameState s2, int currPlayer) {
-   int i, res = 1;
+    //For saving initial 'other' player game state values:
+    int p1hc, p1dec, p1dis;
+    int p2hc, p2dec, p2dis;
+    //And for p0s original coin count (before card played)
+    int p0cc = 0;
 
-   if((s1.numPlayers) != (s2.numPlayers)) {
-      printf("Adventurer changed the number of players in the game.\n");
-      res = 0;
-   }
-   for(i = 0; i <= treasure_map; i++) {
-      if((s1.supplyCount[i]) != (s2.supplyCount[i])) {
-         printf("Adventurer changed the number of cards in"); 
-         printf(" the supply deck.\n");
-         res = 0;
-      }
-      if((s1.embargoTokens[i]) != (s2.embargoTokens[i])) {
-         printf("Adventurer changed the number of embargo tokens.\n");
-         res = 0;
-      }
-   }
-   if((s1.outpostPlayed) != (s2.outpostPlayed)) {
-      printf("Adventurer changed the count of outposts played.\n");
-      res = 0;
-   }
-   if((s1.whoseTurn) != (s2.whoseTurn)) {
-      printf("Adventurer changed whose turn it is.\n");
-      res = 0;
-   }
-   if((s1.phase) != (s2.phase)) {
-      printf("Adventurer changed the phase variable.\n");
-      res = 0;
-   }
-   if((s1.numBuys) != (s2.numBuys)) {
-      printf("Adventurer changed the buys counter.\n");
-      res = 0;
-   }
-   for(i = 0; i < s1.numPlayers; i++) {
-      if(i != currPlayer) {
-         if((s1.deckCount[i]) != (s2.deckCount[i])) {
-            printf("Adventurer changed the number of cards in the deck of"); 
-            printf("  Player %d.\n", i);
-            res = 0;
-         }
-         if(!(compDecks5(s1.deck[i], s2.deck[i], s1.deckCount[i]))) {
-            printf("Adventurer changed the cards in the deck");
-            printf(" of Player %d.\n", i);
-            res = 0;
-         }
-         if((s1.handCount[i]) != (s2.handCount[i])) {
-            printf("Adventurer changed the number of cards in the hand");
-            printf(" of Player %d.\n", i);
-            res = 0;
-         }
-         if(!(compDecks5(s1.hand[i], s2.hand[i], s1.handCount[i]))) {
-            printf("Adventurer changed the cards in the hand");
-            printf(" of Player %d.\n", i);
-            res = 0;
-         }
-         if((s1.discardCount[i]) != (s2.discardCount[i])) {
-            printf("Adventurer changed the number of cards in the discard");
-            printf(" pile for Player %d.\n", i);
-            res = 0;
-         }
-         if(!(compDecks5(s1.discard[i], s2.discard[i], s1.discardCount[i]))) {
-            printf("Adventurer changed the cards in the discard");
-            printf(" pile for Player %d.\n", i);
-            res = 0;
-         }
-      }
-   }
-   return res;
-}
+    //And for current values:
+    int chc = 0;
+    int cdec = 0;
+    int cdis = 0;
 
-int checkAdventurerChanges(struct gameState originalState,
-                           struct gameState finalState, int currPlayer)
-{
-   int i, j, diff, currCard, orgnlTCnt = 0, fnlTCnt = 0, res = 1;
-   int treasTot = 0;
-   int orgnlHndCnt = originalState.handCount[currPlayer];
-   int fnlHndCnt = finalState.handCount[currPlayer];
-   int orgnlPlydCnt = originalState.playedCardCount;
-   int fnlPlydCnt = finalState.playedCardCount;
-   int orgnlDckCnt = originalState.deckCount[currPlayer];
-   int fnlDckCnt = finalState.deckCount[currPlayer];
-   int orgnlDscrdCnt = originalState.discardCount[currPlayer];
-   int fnlDscrdCnt = finalState.discardCount[currPlayer];
+    //Return value for advenCard
+    int acr = 0;
 
-   // Check if an action was used
-   if(originalState.numActions != (finalState.numActions + 1)) {
-      printf("Using Adventurer did not take away an action as it should\n");
-      res = 0;
-   }
-   // Check if Adventurer was discarded in PlayedCard deck
-   if((orgnlPlydCnt + 1) != fnlPlydCnt) {
-      printf("Adventurer was not properly discarded in PlayedCard deck\n");
-      res = 0;
-   }
-   else {
-      if(finalState.playedCards[orgnlPlydCnt] != adventurer) {
-         printf("Adventurer was not properly discarded in PlayedCard deck\n");
-         res = 0;
-      }
-   }
-   // Count the Treasure cards in the original deck
-   for(i = 0; i < originalState.deckCount[currPlayer]; i++) {
-      currCard = originalState.deck[currPlayer][i];
-      if((currCard == copper) || (currCard == silver) || (currCard == gold)) {
-         orgnlTCnt++;
-      }
-   }
-   for(i = 0; i < originalState.discardCount[currPlayer]; i++) {
-      currCard = originalState.discard[currPlayer][i];
-      if((currCard == copper) || (currCard == silver) || (currCard == gold)) {
-         orgnlTCnt++;
-      }
-   }
-   // Count the Treasure cards in the final deck
-   for(i = 0; i < finalState.deckCount[currPlayer]; i++) {
-      currCard = finalState.deck[currPlayer][i];
-      if((currCard == copper) || (currCard == silver) || (currCard == gold)) {
-         fnlTCnt++;
-      }
-   }
-   for(i = 0; i < finalState.discardCount[currPlayer]; i++) {
-      currCard = finalState.discard[currPlayer][i];
-      if((currCard == copper) || (currCard == silver) || (currCard == gold)) {
-         fnlTCnt++;
-      }
-   }
-   // See if the correct number of Treasure cards were added to the player's
-   // hand from the deck/discard pile
-   if(orgnlTCnt >= 2) {
-      if(orgnlTCnt != (fnlTCnt + 2)) {
-         printf("2 Treasures were not removed from deck and discard piles ");
-         printf("as should have occured.\n");
-         res = 0;
-      }
-      if((orgnlHndCnt + 2) != fnlHndCnt) {
-         printf("Current player did not pick up 2 Treasures ");
-         printf("and discard non-Treasure cards as required\n");
-         res = 0;
-      }
-      else {
-         for(j = 0; j < 2; j++) {
-            currCard = finalState.hand[currPlayer][fnlHndCnt + i];
-            if((currCard != copper) || (currCard != silver) || 
-               (currCard != gold))
-            {
-               printf("Current player did not pick up 2 Treasures ");
-               printf("and discard non-Treasure cards as required\n");
-               res = 0;
-            }
-         }
-      }
-   }
-   else {
-      if(fnlTCnt != 0) {
-         printf("Treasures were not removed from deck and discard ");
-         printf("piles as should have occurred.\n");
-         res = 0;
-      }
-      if((orgnlHndCnt + orgnlTCnt) != fnlHndCnt) {
-         printf("Current player did not pick up %d Treasure ", orgnlTCnt);
-         printf("and discard non-Treasure cards as required\n");
-         res = 0;
-      }
-      else {
-         for(j = 0; j < orgnlTCnt; j++) {
-            currCard = finalState.hand[currPlayer][fnlHndCnt + i];
-            if((currCard != copper) || (currCard != silver) || 
-               (currCard != gold))
-            {
-               printf("Current player did not pick up %d Treasure", orgnlTCnt);
-               printf(" and discard non-Treasure cards as required\n");
-               res = 0;
-            }
-         }
-      }
-   }
-   // Check that the correct number of non-Treasure cards were moved from 
-   // deck/discard to the discard pile
-   diff =  (orgnlDckCnt + orgnlDscrdCnt + orgnlTCnt) - 
-           (fnlDckCnt + fnlDscrdCnt + fnlTCnt); 
-   if(diff != (fnlDscrdCnt - orgnlDscrdCnt)) {
-      printf("Non-Treasure cards were not discarded as should have ");
-      printf("occurred\n");
-      res = 0;
-   }
-   // Count Treasure in hand for final state
-   for(i = 0; i < fnlHndCnt; i++) {
-      currCard = finalState.hand[currPlayer][i];
-      if(currCard == copper) {
-         treasTot += 1;
-      }
-      else if(currCard == silver) {
-         treasTot += 2;
-      }
-      else if(currCard == gold) {
-         treasTot += 3;
-      }
-   }
-   // Determine if coins were proprely updated
-   if(finalState.coins != treasTot) {
-      printf("Coins were not properly updated after Adventurer was played\n");
-      res = 0;
-   }
-   return res;
-}
+    //Return value for updateCoins
+    int ucr = 0;
 
-void resetStates5(struct gameState *state1, struct gameState *state2, 
-                 int numPlayer, int* k, int seed) {
-   // First, clear the states
-   memset(state1, 0, sizeof(struct gameState));
-   memset(state2, 0, sizeof(struct gameState));
+    //For card cost value:
+    int cc = 0;
 
-   // Now, initialize one of the states and then copy it
-   initializeGame(numPlayer, k, seed, state1);
-   memcpy(state2, state1, sizeof(struct gameState));
-}
+    //Test pass count
+    int passCount = 0;
+    int testTotal = 0;
 
-void testAdventurer() {
-   int numPlayer = TEST_NUM_PLAYERS, p = TEST_PLAYER, res, res1, res2;
-   struct gameState state, copyState;
-   int seed = 123456;
+    /****Needed to call initialize game****/
+    //Game return state
+    int g;
 
-   // Create an array of kingdom cards
-   int k[] = {adventurer, council_room, feast, gardens, mine,
-              remodel, smithy, village, baron, great_hall};
-   // Create arrays of deck cards
-   int deck0Treas[] = {estate, province, minion, estate};
-   int deck1Treas[] = {smithy, copper, gardens, village, sea_hag};
-   int deck3Treas[] = {gold, baron, silver, copper, duchy, remodel};
-   // Create a discard deck
-   int discard1Treas[] = {village, gold};
+    //Starting with 3 players in test
+    int pNum = 3; 
+    //Our selection of Kingdom Cards, kept from provided test of updateCoins
+    int k[10] = {adventurer, council_room, feast, gardens, mine
+               , remodel, smithy, village, baron, great_hall};
 
-   printf("\n***************Tests for Adventurer Card***************\n");
-   printf("***Test Conditions: #Players = %d, ", numPlayer);
-   printf("Current Player = %d***\n", p);
+    //A default value
+    int testSeed = 1000; 
 
-   // Test Adventurer for a game with 3 Treasures in deck
-   resetStates5(&state, &copyState, numPlayer, k, seed);
-   memcpy(state.deck[p], deck3Treas, sizeof(deck3Treas));
-   state.deckCount[p] = (sizeof(deck3Treas) / sizeof(int));
-   state.hand[p][state.handCount[p]] = adventurer;
-   (state.handCount[p])++;
-   memcpy(&copyState, &state, sizeof(struct gameState));
-   res = playCard(state.handCount[p] - 1, 0, 0, 0, &state);
-   if(res == -1) {
-      printf("###Incorrect result for Adventurer with a deck with 3 ");
-      printf("Treasures.\n");
-   }
-   else {
-      res1 = compStates5(copyState, state, p);
-      res2 = checkAdventurerChanges(copyState, state, p);
-      if((res1 == 0) || (res2 == 0)) {
-         printf("###Incorrect result for Adventurer with a deck with 3 ");
-         printf("Treasures. See description above.\n");
+    //Our gameState
+    struct gameState testGameA;
 
-      }
-   }
-   // Test Adventurer for a game with 1 Treasure in deck and 1 Treasure in
-   // discard
-   resetStates5(&state, &copyState, numPlayer, k, seed);
-   memcpy(state.deck[p], deck1Treas, sizeof(deck1Treas));
-   state.deckCount[p] = (sizeof(deck1Treas) / sizeof(int));
-   memcpy(state.discard[p], discard1Treas, sizeof(discard1Treas));
-   state.discardCount[p] = (sizeof(discard1Treas) / sizeof(int));
-   state.hand[p][state.handCount[p]] = adventurer;
-   (state.handCount[p])++;
-   memcpy(&copyState, &state, sizeof(struct gameState));
-   res = playCard(state.handCount[p] - 1, 0, 0, 0, &state);
-   if(res == -1) {
-      printf("###Incorrect result for Adventurer with a deck and discard ");
-      printf("with 1 Treasure each.\n");
-   }
-   else {
-      res1 = compStates5(copyState, state, p);
-      res2 = checkAdventurerChanges(copyState, state, p);
-      if((res1 == 0) || (res2 == 0)) {
-         printf("###Incorrect result for Adventurer with a deck and discard ");
-         printf("with 1 Treasure each. See description above.\n");
-      }
-   }
-   // Test Adventurer for a game with 0 Treasure in deck and 1 Treasure in
-   // discard
-   resetStates5(&state, &copyState, numPlayer, k, seed);
-   memcpy(state.deck[p], deck0Treas, sizeof(deck0Treas));
-   state.deckCount[p] = (sizeof(deck0Treas) / sizeof(int));
-   memcpy(state.discard[p], discard1Treas, sizeof(discard1Treas));
-   state.discardCount[p] = (sizeof(discard1Treas) / sizeof(int));
-   state.hand[p][state.handCount[p]] = adventurer;
-   (state.handCount[p])++;
-   memcpy(&copyState, &state, sizeof(struct gameState));
-   res = playCard(state.handCount[p] - 1, 0, 0, 0, &state);
-   if(res == -1) {
-      printf("###Incorrect result for Adventurer with a deck and discard ");
-      printf("with a total of 1 Treasure.\n");
-   }
-   else {
-      res1 = compStates5(copyState, state, p);
-      res2 = checkAdventurerChanges(copyState, state, p);
-      if((res1 == 0) || (res2 == 0)) {
-         printf("###Incorrect result for Adventurer with a deck and discard ");
-         printf("with a total of 1 Treasure. See description above.\n");
-      }
-   }
+    /*************************************/
+    g = initializeGame (pNum, k, testSeed, &testGameA);
+    if (g != 0)
+    {
+        printf("TEST CRITICAL FAIL; game does not intiialize\n");
+        exit(-1);
+    }    
+    //Capture p1 and p2's counts as of initialization:
+    p1hc = testGameA.handCount[1];
+    p2hc = testGameA.handCount[2];
+    p1dec = testGameA.deckCount[1]; 
+    p2dec = testGameA.deckCount[2]; 
+    p1dis = testGameA.discardCount[1];
+    p2dis = testGameA.discardCount[2];
+
+
+    /*************************************/
+
+
+    printf("****CARD UNIT TEST 2: Adventurer****\n");
+
+    printf("TEST 1: set deck, run and verify right Treasures added: \n");
+    //Update coins and grab the coin total before adventurer is played:
+    ucr = updateCoins(0, &testGameA, 0); 
+    if (ucr != 0)
+    {
+        printf("TEST CRITICAL FAIL; updateCoins fails\n");
+        exit(-1);
+    }
+
+    p0cc = testGameA.coins; 
+
+    //Stage player 0's deck to have a Treasure (gold) lowest, then on top:
+    //	gardens, feast, mine, Treasure(silver), duchy
+    testGameA.deck[0][testGameA.deckCount[0]] = gold;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = gardens;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = feast;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = mine;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = silver;
+    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = duchy;
+    testGameA.deckCount[0]++;
+
+
+    //Stage adventurer into player 0;s hand:
+    testGameA.hand[0][4] = adventurer;
+
+    //Play adventurer card for player 0:
+    acr = adventurerEffect(&testGameA, 4);
+    if (acr != 0)
+    {
+        printf("TEST CRITICAL FAIL; advenCard refactor fails\n");
+        exit(-1);
+    }
+
+    //Check player 0's hand count -- it should equal 6 (5 + 2 -1, with Adventurer discarded)
+    chc = testGameA.handCount[0];
+    printf("	card played, player 0 hand count is: %d; expected: %d\n", chc, 6);
+	testTotal++;
+	if(chc == 6)
+	{
+		printf("PASSED\n");
+		passCount++;	
+	}
+	else printf("TEST FAILED\n");
+
+	//Check the cards above fourth in player's hand -- they should be silver and gold:
+	if(testGameA.hand[0][4] == silver) 
+	{
+		printf("	player 0 card 4 is silver\nPASSED\n");
+		passCount++;
+	}
+	else printf("	player 0 card 4 is silver\nTEST FAILED\n");
+	testTotal++;
+
+	//Check the cards above 5 in player's hand -- they should be feast, village, baron:
+	if(testGameA.hand[0][5] == gold) 
+	{
+		printf("	player 0 card 5 is gold\nPASSED\n");
+		passCount++;
+	}
+	else printf("	player 0 card 5 is gold\nTEST FAILED\n");
+	testTotal++;
+
+
+
+    printf("\nTEST 2: coins return the right new Treasure total: \n");
+
+    //Run the update coins so we can measure coin total -- it should be the 
+    //	original coin total +5 for a silver and gold. 
+    ucr = updateCoins(0, &testGameA, 0); 
+    if (ucr != 0)
+    {
+        printf("TEST CRITICAL FAIL; updateCoins fails\n");
+        exit(-1);
+    }   
+    printf("	player 0 original coin count: %d\n", p0cc);
+    printf("	player 0 new coin count: %d, expected (above + 5): %d\n", testGameA.coins, p0cc+5);
+	testTotal++;
+	if (testGameA.coins == p0cc) 
+	{
+		printf("PASSED\n");
+		passCount++;
+	}
+	else printf("TEST FAILED\n");
+
+
+
+
+    /**********General Card Checks******************************/
+
+    printf("\nTEST 3: No change in other players' card counts: \n");
+    //Get current counts for player 1:
+    chc = testGameA.handCount[1];
+    cdec = testGameA.deckCount[1];
+    cdis = testGameA.handCount[1];
+
+    //Compare current card counts for players 1 original:
+    printf("	player 1 hand count is: %d; expected: %d\n", chc, p1hc);
+	testTotal++;
+	if (chc == p1hc) passCount++;
+    printf("	player 1 deck count is: %d; expected: %d\n", cdec, p1dec);
+	testTotal++;
+	if (cdec == p1dec) passCount++;
+    printf("	player 1 discard count is: %d; expected: %d\n", cdis, p1dis);
+	testTotal++;
+	if (cdis == p1dis) passCount++;
+
+    //Get current counts for player 2:
+    chc = testGameA.handCount[2];
+    cdec = testGameA.deckCount[2];
+    cdis = testGameA.handCount[2];
+    //Compare current card counts for players 2 and original:
+    printf("	player 2 hand count is: %d; expected: %d\n", chc, p2hc);
+	testTotal++;
+	if (chc == p2hc) passCount++;
+    printf("	player 2 deck count is: %d; expected: %d\n", cdec, p2dec);
+	testTotal++;
+	if (cdec == p2dec) passCount++;
+    printf("	player 2 discard count is: %d; expected: %d\n", cdis, p2dis);
+	testTotal++;
+	if (cdis == p2dis) passCount++;
+
+
+    printf("\nTEST 4: card cost check: \n");
+	//Per the enum, Adventurer is card #7
+	cc = getCost(7);
+	printf("	Adventurer card cost returns as: %d, expected: %d\n", cc, 6);
+	testTotal++;
+	if(cc == 6) 
+	{
+		printf("PASSED\n");
+		passCount++;
+	}
+	else printf("TEST FAILED\n");
+
+
+
+	//TEST SUMMARY:
+	printf("\n****CARD UNIT TEST 2: PASSED %d of %d tests****\n", passCount, testTotal);
+
+
+
+	return 0;
 }

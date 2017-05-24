@@ -1,468 +1,244 @@
-/******************************************************************************
- * Filename:     randomtestadventurer.c
- * Author:       Fred Kontur
- * Date Written: May 1, 2017
- * Last Edited:  May 13, 2017
- * Description:  This file contains a random test generator for the Adventurer 
- *               card in dominion.c
- * Business Requirements for Adventurer:
- * 1. The player uses an action to draw cards from the deck until 2 Treasure 
- *    cards are found. The following caveats apply -
- *    a) The Treasure cards are placed in the player's hand while all 
- *       non-Treasure cards that are found are discarded.
- *    b) If it is necessary to shuffle in the middle, then the player should
- *       do so.
- *    c) If the player runs out of cards and still only has one treasure, then
- *       the player only gets one treasure.
- * 2. Nothing else changes in the game state except what is required to 
- *    accomplish the above actions. 
- * 3. If the player does not have actions available, then he/she cannot use
- *    the card.
-******************************************************************************/
+/**************************************************************************************
+    Name: Doug McCord
+    Date: 5/9/17
+    Project: CS 362 Assignment 4
+    Description: 
+    "1- Write an automated random test generator for three Dominion cards “the 
+        refactored code you created for assignment-2”, one of them being the adventurer 
+        card, and at least one being a card you wrote unit tests for in assignment-3. 
+        Check these testers in as randomtestcard1.c, randomtestcard2.c, and 
+        randomtestadventurer.c.
+
+     2- Submit a pdf file, called Assignment-4.pdf, to the Canvas contains the following 
+        sections:
+        • Random Testing: write up the development of your random testers, including 
+        improvements in coverage and efforts to check the correctness of your 
+        specification in a section called.
+        • Code Coverage: discuss how much of adventurer and the other cards’ code you 
+        managed to cover. Was there code you failed to cover? Why?. For at least one 
+        card, make your tester achieve 100% statement and branch coverage, and document 
+        this (and how long the test has to run to achieve this level of coverage). It 
+        should not take more than five minutes to achieve the coverage goal (on a 
+        reasonable machine, e.g. flip).
+        • Unit vs Random: compare your coverage to that for your unit tests that you 
+        created in assignment-3, and discuss how the tests differ in ability to detect 
+        faults. Which tests had higher coverage – unit or random? Which tests had better 
+        fault detection capability? ( Be detailed and thorough!).
+
+     3- Add rules to the Makefile to produce randomtestcard1.out, randomtestcard2.out, 
+        and randomtestadventurer.out, including coverage results.
+
+    SOURCES: 
+        *CS 362 course lecture material, Piazza help boards and provided sample code
+            including bst.zip, testUpdateCoins.c and cardtest4.c
+        *Other sources:
+        	
+
+***************************************************************************************/
+
+
 #include "dominion.h"
+#include "dominion_helpers.h"
+#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <assert.h>
+#include <math.h>
+#include "rngs.h"
 
-#define NUM_ITER 2000
-#define MAX_HAND_COUNT 10
-#define MAX_DECK_COUNT 10
-#define MAX_DISCARD_COUNT 10
-#define MAX_PLAYED_COUNT 10
+#define TESTS 2000
 
-// Returns 1 if decks are the same, 0 if different
-int compDecks(int* arr1, int* arr2, int deckSize) {
-   int i;
 
-   for(i = 0; i < deckSize; i++) {
-      if(arr1[i] != arr2[i]) {
-         return 0;
-      }
-   }
 
-   return 1;
+int advenCardTester(struct gameState *t, int hp) {
+
+  /*Return value for advenCard, card count and coin count before function*/
+  int acR, cardC, coinC;
+
+  cardC = t->handCount[t->whoseTurn];
+  updateCoins(t->whoseTurn, t, 0);
+  coinC = t->coins;
+
+  acR = adventurerEffect (t, hp);
+
+  /*Oracle tests:
+    Return -1 for a fail, for the wrong card count after adventurer, 
+        or for a coin count that is not increased by 2 or more (2 coppers min)
+    */
+  updateCoins(t->whoseTurn, t, 0);
+
+  if(acR != 0 || t->handCount[t->whoseTurn] != cardC + 1 ||  t->coins >= coinC + 2) return -1;
+
+  return 0;
 }
 
-// This function compares 2 game states with the exception of the current 
-// player's hand, deck, played cards, and discard pile and the corresponding 
-// counts. It also does not compare numActions and coins. It returns 1 if the 
-// states are the same, 0 if different.
-int compStates(struct gameState s1, struct gameState s2, int currPlayer) {
-   int i, res = 1, numPlayer = s1.numPlayers;
 
-   // If numPlayer is greater than MAX_PLAYERS, then change it to MAX_PLAYERS
-   // so the array tests don't go out of bounds
-   if(numPlayer > MAX_PLAYERS) {
-      numPlayer = MAX_PLAYERS;
-   }
+int main () {
 
-   if((s1.numPlayers) != (s2.numPlayers)) {
-      printf("Adventurer changed the number of players in the game.\n");
-      res = 0;
-   }
-   for(i = 0; i <= treasure_map; i++) {
-      if((s1.supplyCount[i]) != (s2.supplyCount[i])) {
-         printf("Adventurer changed the number of cards in"); 
-         printf(" the supply deck.\n");
-         res = 0;
-      }
-      if((s1.embargoTokens[i]) != (s2.embargoTokens[i])) {
-         printf("Adventurer changed the number of embargo tokens.\n");
-         res = 0;
-      }
-   }
-   if((s1.outpostPlayed) != (s2.outpostPlayed)) {
-      printf("Adventurer changed the count of outposts played.\n");
-      res = 0;
-   }
-   if((s1.whoseTurn) != (s2.whoseTurn)) {
-      printf("Adventurer changed whose turn it is.\n");
-      res = 0;
-   }
-   if((s1.phase) != (s2.phase)) {
-      printf("Adventurer changed the phase variable.\n");
-      res = 0;
-   }
-   if((s1.numBuys) != (s2.numBuys)) {
-      printf("Adventurer changed the buys counter.\n");
-      res = 0;
-   }
-   for(i = 0; i < numPlayer; i++) {
-      if(i != currPlayer) {
-         if((s1.deckCount[i]) != (s2.deckCount[i])) {
-            printf("Adventurer changed the number of cards in the deck of"); 
-            printf(" Player %d.\n", i);
-            res = 0;
-         }
-         if(!(compDecks(s1.deck[i], s2.deck[i], s1.deckCount[i]))) {
-            printf("Adventurer changed the cards in the deck");
-            printf(" of Player %d.\n", i);
-            res = 0;
-         }
-         if((s1.handCount[i]) != (s2.handCount[i])) {
-            printf("Adventurer changed the number of cards in the hand");
-            printf(" of Player %d.\n", i);
-            res = 0;
-         }
-         if(!(compDecks(s1.hand[i], s2.hand[i], s1.handCount[i]))) {
-            printf("Adventurer changed the cards in the hand");
-            printf(" of Player %d.\n", i);
-            res = 0;
-         }
-         if((s1.discardCount[i]) != (s2.discardCount[i])) {
-            printf("Adventurer changed the number of cards in the discard");
-            printf(" pile for Player %d.\n", i);
-            res = 0;
-         }
-         if(!(compDecks(s1.discard[i], s2.discard[i], s1.discardCount[i]))) {
-            printf("Adventurer changed the cards in the discard");
-            printf(" pile for Player %d.\n", i);
-            res = 0;
-         }
-      }
-   }
-   return res;
-}
+  /*i for iterator, n for number of tests, p for players, x y z for random variables*/
+  int i, n, p, x, y, z;
+  /*For assignment-5 only*/
+  int handPos;
+  int testsPassed = TESTS;
 
-int checkAdventurerChanges(struct gameState originalState,
-                           struct gameState finalState, int currPlayer)
-{
-   int i, j, diff, currCard, orgnlTCnt = 0, fnlTCnt = 0, res = 1;
-   int treasTot = 0;
-   int orgnlHndCnt = originalState.handCount[currPlayer];
-   int fnlHndCnt = finalState.handCount[currPlayer];
-   int orgnlPlydCnt = originalState.playedCardCount;
-   int fnlPlydCnt = finalState.playedCardCount;
-   int orgnlDckCnt = originalState.deckCount[currPlayer];
-   int fnlDckCnt = finalState.deckCount[currPlayer];
-   int orgnlDscrdCnt = originalState.discardCount[currPlayer];
-   int fnlDscrdCnt = finalState.discardCount[currPlayer];
+  struct gameState TestState;
 
-   // Check if an action was used
-   if(originalState.numActions != (finalState.numActions + 1)) {
-      printf("Using Adventurer did not take away an action as it should\n");
-      res = 0;
-   }
-   // Check if Adventurer was discarded in PlayedCard deck
-   if((orgnlPlydCnt + 1) != fnlPlydCnt) {
-      printf("Adventurer was not properly discarded in PlayedCard deck\n");
-      res = 0;
-   }
-   else {
-      if(finalState.playedCards[orgnlPlydCnt] != adventurer) {
-         printf("Adventurer was not properly discarded in PlayedCard deck\n");
-         res = 0;
-      }
-   }
-   // Count the Treasure cards in the original deck
-   for(i = 0; i < originalState.deckCount[currPlayer]; i++) {
-      currCard = originalState.deck[currPlayer][i];
-      if((currCard == copper) || (currCard == silver) || (currCard == gold)) {
-         orgnlTCnt++;
-      }
-   }
-   for(i = 0; i < originalState.discardCount[currPlayer]; i++) {
-      currCard = originalState.discard[currPlayer][i];
-      if((currCard == copper) || (currCard == silver) || (currCard == gold)) {
-         orgnlTCnt++;
-      }
-   }
-   // Count the Treasure cards in the final deck
-   for(i = 0; i < finalState.deckCount[currPlayer]; i++) {
-      currCard = finalState.deck[currPlayer][i];
-      if((currCard == copper) || (currCard == silver) || (currCard == gold)) {
-         fnlTCnt++;
-      }
-   }
-   for(i = 0; i < finalState.discardCount[currPlayer]; i++) {
-      currCard = finalState.discard[currPlayer][i];
-      if((currCard == copper) || (currCard == silver) || (currCard == gold)) {
-         fnlTCnt++;
-      }
-   }
-   // See if the correct number of Treasure cards were added to the player's
-   // hand from the deck/discard pile
-   if(orgnlTCnt >= 2) {
-      if(orgnlTCnt != (fnlTCnt + 2)) {
-         printf("2 Treasures were not removed from deck and discard piles ");
-         printf("as should have occured.\n");
-         res = 0;
-      }
-      if((orgnlHndCnt + 2) != fnlHndCnt) {
-         printf("Current player did not pick up 2 Treasures ");
-         printf("and discard non-Treasure cards as required\n");
-         res = 0;
-      }
-      else {
-         for(j = 0; j < 2; j++) {
-            currCard = finalState.hand[currPlayer][fnlHndCnt + i];
-            if((currCard != copper) || (currCard != silver) || 
-               (currCard != gold))
-            {
-               printf("Current player did not pick up 2 Treasures ");
-               printf("and discard non-Treasure cards as required\n");
-               res = 0;
-            }
-         }
-      }
-   }
-   else {
-      if(fnlTCnt != 0) {
-         printf("Treasures were not removed from deck and discard ");
-         printf("piles as should have occurred.\n");
-         res = 0;
-      }
-      if((orgnlHndCnt + orgnlTCnt) != fnlHndCnt) {
-         printf("Current player did not pick up %d Treasure ", orgnlTCnt);
-         printf("and discard non-Treasure cards as required\n");
-         res = 0;
-      }
-      else {
-         for(j = 0; j < orgnlTCnt; j++) {
-            currCard = finalState.hand[currPlayer][fnlHndCnt + i];
-            if((currCard != copper) || (currCard != silver) || 
-               (currCard != gold))
-            {
-               printf("Current player did not pick up %d Treasure", orgnlTCnt);
-               printf(" and discard non-Treasure cards as required\n");
-               res = 0;
-            }
-         }
-      }
-   }
-   // Check that the correct number of non-Treasure cards were moved from 
-   // deck/discard to the discard pile
-   diff =  (orgnlDckCnt + orgnlDscrdCnt + orgnlTCnt) - 
-           (fnlDckCnt + fnlDscrdCnt + fnlTCnt); 
-   if(diff != (fnlDscrdCnt - orgnlDscrdCnt)) {
-      printf("Non-Treasure cards were not discarded as should have ");
-      printf("occurred\n");
-      res = 0;
-   }
-   // Count Treasure in hand for final state
-   for(i = 0; i < fnlHndCnt; i++) {
-      currCard = finalState.hand[currPlayer][i];
-      if(currCard == copper) {
-         treasTot += 1;
-      }
-      else if(currCard == silver) {
-         treasTot += 2;
-      }
-      else if(currCard == gold) {
-         treasTot += 3;
-      }
-   }
-   // Determine if coins were properly updated
-   if(finalState.coins != treasTot) {
-      printf("Coins were not properly updated after Adventurer was played\n");
-      res = 0;
-   }
-   return res;
-}
+  printf ("*************RANDOM TEST ADVENTURER CARD*************\n");
+  printf ("Testing adventurer Card:\n");
 
-int randomTestGenerator(struct gameState *state1, struct gameState *state2)
-{
-   int i, j, currPlayer, numPlayer, numHand, handPos, numDeck, numDiscard;
-   int numPlayed;
+  /*SelectStream is a function in rngs.c to change between up to 256 streams of 
+  random numbers, with PutSeed to set the seed*/
+  SelectStream(2);
+  PutSeed(3);
 
-   // First, clear the states
-   memset(state1, 0, sizeof(struct gameState));
-   memset(state2, 0, sizeof(struct gameState));
+  /*Create general randomized chaos in the hand: */
+  for (n = 0; n < TESTS; n++) {
+    for (i = 0; i < sizeof(struct gameState); i++) {
+      ((char*)&TestState)[i] = floor(Random()*256);
+    }
 
-   // Generate a random number of players between 1 and 5
-   numPlayer = (rand() % 5) + 1;
-   state1->numPlayers = numPlayer;
+    /*Pick number of players, and within this pick whose turn*/
+    p = floor(Random() * MAX_PLAYERS);
+    p = p+1;
+    TestState.numPlayers = p;
+    //TestState.whoseTurn = floor(Random()*p);
+    TestState.whoseTurn = 0;
+    //printf("Test #%d: there are %d players\n", n+1, TestState.numPlayers);
 
-   // Choose a random current player between 0 and 3
-   currPlayer = rand() % 4;
-   state1->whoseTurn = currPlayer;
+    /*Hard to add limits to card values -- SEE NOTES*/
+    x = floor(Random() * MAX_HAND);
+    TestState.handCount[TestState.whoseTurn] = x;   
+    for (i=0; i<x; i++)
+    {
+        z= floor(Random() *27);
+        TestState.hand[TestState.whoseTurn][i] = z;
+    }
 
-   // Choose a random number of cards for each of the sets of cards in supply
-   // between -5 and 100 and similarly for embargo tokens
-   for(i = 0; i <= treasure_map; i++) {
-      state1->supplyCount[i] = (rand() % 106) - 5;
-      state1->embargoTokens[i] = (rand() % 106) - 5;
-   }
+    /*Now add an adventurer card in a random, but possible spot*/
+    //printf("Test #%d: handCount is: %d\n", n+1, TestState.handCount[TestState.whoseTurn]);
+    handPos = floor(Random() * x);
+    TestState.hand[TestState.whoseTurn][handPos] = 7;
 
-   // Choose a random number for outpostPlayed between 0 and 10
-   state1->outpostPlayed = rand() % 11;
+    /*Make sure the counts contain values -- SEE NOTES -- due to added bugs*/
+    TestState.deckCount[TestState.whoseTurn] = (floor(Random() * 200));
+    //printf("Test #%d: deckCount is: %d\n", n+1, TestState.deckCount[TestState.whoseTurn]); 
+    for (i=0; i<TestState.deckCount[TestState.whoseTurn]; i++)
+    {
+        z= floor(Random() *27);
+        TestState.deck[TestState.whoseTurn][i] = z;
+    }
+    TestState.discardCount[TestState.whoseTurn] = (floor(Random() * 200));
+    //printf("Test #%d: discardCount is: %d\n", n+1, TestState.discardCount[TestState.whoseTurn]); 
+    for (i=0; i<TestState.discardCount[TestState.whoseTurn]; i++)
+    {
+        z= floor(Random() *27);
+        TestState.discard[TestState.whoseTurn][i] = z;
+    }
+    /*Make sure minimum treasure cards are contained in one of 2 random hands -- SEE NOTES*/
+    /*y will hold the type of treasure, z will hold the spot of this in hand*/
+    p = floor(Random() * 2);
+    /*Add to deck*/
+    if(p==0)
+    {
+        /*Coin*/
+        y = (floor(Random() * 3)+4);
+        /*Position*/
+        z = TestState.deckCount[TestState.whoseTurn];
+        x = floor(Random() * z);
+        TestState.deck[TestState.whoseTurn][x] =  y;
+    }
+    /*Otherwise the discard*/
+    else
+    {
+        /*Coin*/
+        y = (floor(Random() * 3)+4);
+        /*Position*/
+        z = TestState.discardCount[TestState.whoseTurn];
+        x = floor(Random() * z);
+        TestState.discard[TestState.whoseTurn][x] =  y;
 
-   // Choose a random number for outpostTurn between 0 and 10
-   state1->outpostTurn = rand() % 11;
+    }
 
-   // Choose a random number for phase between 0 and 4
-   state1->phase = rand() % 5;
 
-   // Choose a random number for number of actions between 0 and 5
-   state1->numActions = rand() % 6;
 
-   // Choose a random number of coins between -1 and 20
-   state1->coins = (rand() % 22) - 1;
+    /*HARD-CODED VALUES TEST: safe-ranged, not 'interesting'*/
+    /*
+    
+    TestState.numPlayers = 3;
+    TestState.supplyCount[treasure_map+1];
+    TestState.outpostPlayed = 0;
+    TestState.whoseTurn = 0;
+    TestState.phase = 0;
+    TestState.numActions = 1;
+    TestState.coins = 0;
+    TestState.numBuys = 1;
+    
+    TestState.handCount[0] = 5;
+    TestState.handCount[1] = 5;
+    TestState.handCount[2] = 5;
 
-   // Choose a random number for number of buys between -1 and 5
-   state1->numBuys = (rand() % 7) - 1;
+    TestState.hand[0][0] = 1;
+    TestState.hand[0][1] = 4;
+    TestState.hand[0][2] = 4;
+    TestState.hand[0][3] = 3;
+    TestState.hand[0][4] = 7;
 
-   // Choose a random number of cards in the current player's hand between 1 
-   // and MAX_HAND_COUNT
-   numHand = (rand() % MAX_HAND_COUNT) + 1;
-   state1->handCount[currPlayer] = numHand;
+    TestState.hand[1][0] = 1;
+    TestState.hand[1][1] = 4;
+    TestState.hand[1][2] = 1;
+    TestState.hand[1][3] = 2;
+    TestState.hand[1][4] = 0;
 
-   // Put random cards in the hand of the current player between -1 and 
-   // treasure_map + 1. One of the cards will be replaced by the Adventurer card
-   for(i = 0; i < numHand; i++) {
-      state1->hand[currPlayer][i] = (rand() % (treasure_map + 3)) - 1;
-   }
+    TestState.hand[2][0] = 3;
+    TestState.hand[2][1] = 3;
+    TestState.hand[2][2] = 3;
+    TestState.hand[2][3] = 3;
+    TestState.hand[2][4] = 3;
 
-   // Choose a random hand position for the Adventurer card
-   handPos = rand() % numHand;
-   state1->hand[currPlayer][handPos] = adventurer;
+    TestState.deckCount[0] = 4;
+    TestState.deckCount[1] = 4;  
+    TestState.deckCount[2] = 4;
 
-   // If numPlayer is greater than MAX_PLAYERS, then make it equal to 
-   // MAX_PLAYERS so that the arrays don't go out of bounds for the following
-   // tasks
-   if(numPlayer > MAX_PLAYERS) {
-      numPlayer = MAX_PLAYERS;
-   }
+    TestState.deck[0][0] = 0;
+    TestState.deck[0][1] = 4;
+    TestState.deck[0][2] = 2;
+    TestState.deck[0][3] = 5;
 
-   // For the other players, choose a random number of cards for their hands
-   // between 0 and MAX_HAND_COUNT and populate the hands with random cards
-   // with IDs between -1 and treasure_map + 1
-   for(i = 0; i < numPlayer; i++) {
-      numHand = rand() % (MAX_HAND_COUNT + 1); 
-      if(i != currPlayer) {
-         state1->handCount[i] = numHand;
-         for(j = 0; j < numHand; j++) {
-            state1->hand[i][j] = (rand() % (treasure_map + 3)) - 1;
-         }
-      }
-   }
+    TestState.deck[1][0] = 4;
+    TestState.deck[1][1] = 5;
+    TestState.deck[1][2] = 6;
+    TestState.deck[1][3] = 7;
 
-   // Choose a random number of cards for all of the players' decks between 0 
-   // and MAX_DECK_COUNT
-   for(i = 0; i < numPlayer; i++) {
-      numDeck = rand() % (MAX_DECK_COUNT + 1);
-      state1->deckCount[i] = numDeck;
-      // Put random cards in the deck with IDs between -1 and treasure_map + 1
-      for(j = 0; j < numDeck; j++) {
-         state1->deck[i][j] = (rand() % (treasure_map + 3)) - 1;
-      }
-   }
+    TestState.deck[2][0] = 8;
+    TestState.deck[2][1] = 9;
+    TestState.deck[2][2] = 0;
+    TestState.deck[2][3] = 1;
 
-   // Choose a random number of cards for all of the players' discard piles 
-   // between 0 and MAX_DISCARD_COUNT
-   for(i = 0; i < numPlayer; i++) {
-      numDiscard = rand() % (MAX_DISCARD_COUNT + 1);
-      state1->discardCount[i] = numDiscard;
-      // Put random cards in the discard pile with IDs between -1 and 
-      // treasure_map + 1
-      for(j = 0; j < numDiscard; j++) {
-         state1->discard[i][j] = (rand() % (treasure_map + 3)) - 1;
-      }
-   }
+    TestState.discardCount[0] = 3;
+    TestState.discardCount[1] = 3;  
+    TestState.discardCount[2] = 3;
 
-   // Choose a random number of cards for the played card pile between 0 and 
-   // MAX_PLAYED_COUNT and put random cards in the played card pile with IDs
-   // between -1 and treasure_map + 1
-   numPlayed = rand() % (MAX_PLAYED_COUNT + 1);
-   state1->playedCardCount = numPlayed;
-   for(i = 0; i < numPlayed; i++) {
-      state1->playedCards[i] = (rand() % (treasure_map + 3)) - 1;
-   }
+    TestState.discard[0][0] = 1;
+    TestState.discard[0][1] = 2;
+    TestState.discard[0][2] = 3;
 
-   // Copy the state
-   memcpy(state2, state1, sizeof(struct gameState));
+    TestState.discard[1][0] = 3;
+    TestState.discard[1][1] = 4;
+    TestState.discard[1][2] = 5;
 
-   return handPos;
-}
+    TestState.discard[2][0] = 1;
+    TestState.discard[2][1] = 0;
+    TestState.discard[2][2] = 0;
+   
+    TestState.playedCardCount = 0; 
+    */
 
-void testAdventurer() {
-   int i, j, handPos, res, res1, res2;
-   int numPlayer, currPlayer, numHand, numDeck, numDiscard;
-   struct gameState state, copyState;
+    /*Run the advenCardTester with randomized state:*/
+    /*NOTE: For Assignment-5, needed to add the handPos*/
+    testsPassed += advenCardTester(&TestState, handPos);
+  }
 
-   srand(time(NULL));
+  printf ("Passed %d of %d random card tests\n", testsPassed, TESTS); 
 
-   printf("***************Tests for Adventurer Card***************\n");
-
-   for(i = 0; i < NUM_ITER; i++) {
-      handPos = randomTestGenerator(&state, &copyState);
-      numPlayer = state.numPlayers;
-      currPlayer = state.whoseTurn;
-      numHand = state.handCount[currPlayer];
-      numDeck = state.deckCount[currPlayer];
-      numDiscard = state.discardCount[currPlayer];
-
-      // Play the Adventurer card
-      res = playCard(handPos, 0, 0, 0, &state);
-
-      // If the phase is incorrect, then check to see if -1 is returned
-      if(copyState.phase != 0) {
-         if(res != -1) {
-            printf("Phase: %d\n", copyState.phase);
-            printf("###Incorrect result, Adventurer was played when phase ");
-            printf("was not 0\n\n");
-         }
-      }
-
-      // If the number of actions is 0, then check to see if -1 is returned
-      else if(copyState.numActions < 1) {
-         if(res != -1) {
-            printf("Number of Actions: %d\n", copyState.numActions);             
-            printf("###Incorrect result, Adventurer was played when ");
-            printf("numActions was less than 1\n\n");
-         }
-      }
-     
-      else {
-         if(res == -1) {
-            printf("Test Conditions\n");
-            printf("# Players: %d, Current Player: ", numPlayer);
-            printf("%d\n", currPlayer);
-            printf("Hand Cards:");
-            for(j = 0; j < numHand; j++) {
-               printf(" %d", copyState.hand[currPlayer][j]);
-            }
-            printf("\nDeck Cards:");
-            for(j = 0; j < numDeck; j++) {
-               printf(" %d", copyState.deck[currPlayer][j]);
-            }
-            printf("\nDiscard Pile:");
-            for(j = 0; j < numDiscard; j++) {
-               printf(" %d", copyState.discard[currPlayer][j]);
-            }
-            printf("\n");
-            printf("###Incorrect result, playCard() returned -1\n\n");
-         }
-         else {
-            // Check the resulting state for errors
-            res1 = compStates(copyState, state, currPlayer);
-            res2 = checkAdventurerChanges(copyState, state, currPlayer);
-            if((res1 == 0) || (res2 == 0)) {
-               printf("Test Conditions\n");
-               printf("# Players: %d, ", numPlayer);
-               printf("Current Player: %d\n", currPlayer);
-               printf("Hand Cards:");
-               for(j = 0; j < numHand; j++) {
-                  printf(" %d", copyState.hand[currPlayer][j]);
-               }
-               printf("\nDeck Cards:");
-               for(j = 0; j < numDeck; j++) {
-                  printf(" %d", copyState.deck[currPlayer][j]);
-               }
-               printf("\nDiscard Pile:");
-               for(j = 0; j < numDiscard; j++) {
-                  printf(" %d", copyState.discard[currPlayer][j]);
-               }
-               printf("\n");
-               printf("###Incorrect result, see description above\n\n");
-            }
-         }
-      }
-   }
-}
-
-int main(int argc, char *argv[]) {
-   testAdventurer();
-   return 0;
+  return 0;
 }
