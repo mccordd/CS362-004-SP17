@@ -64,6 +64,16 @@ unittestresults.out: unittest1.c unittest2.c dominion.c rngs.c
 	./cardtest2 >> unittestresults.out
 	gcov dominion.c >> unittestresults.out
 
+	echo "cardtest3.c:" >> unittestresults.out
+	gcc -o cardtest3 dominion.c rngs.c cardtest3.c $(CFLAGS)
+	./cardtest3 >> unittestresults.out
+	gcov dominion.c >> unittestresults.out
+
+	echo "cardtest4.c:" >> unittestresults.out
+	gcc -o cardtest4 dominion.c rngs.c cardtest4.c $(CFLAGS)
+	./cardtest4 >> unittestresults.out
+	gcov dominion.c >> unittestresults.out
+
 
 randomtestadventurer.out: randomtestadventurer.c dominion.c rngs.c
 	echo "randomtestadventurer.c:" >> randomtestadventurer.out

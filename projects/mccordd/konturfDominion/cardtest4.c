@@ -48,19 +48,17 @@ int main() {
     //For saving initial 'other' player game state values:
     int p1hc, p1dec, p1dis;
     int p2hc, p2dec, p2dis;
-    //And for p0s original coin count (before card played)
-    int p0cc = 0;
 
     //And for current values:
     int chc = 0;
     int cdec = 0;
     int cdis = 0;
 
-    //Return value for advenCard
-    int acr = 0;
+    //Return value for council_room card return
+    int crcr = 0;
 
-    //Return value for updateCoins
-    int ucr = 0;
+    //For checking the number of buys player has:
+    int nb = 0;
 
     //For card cost value:
     int cc = 0;
@@ -104,115 +102,111 @@ int main() {
     /*************************************/
 
 
-    printf("****CARD UNIT TEST 2: Adventurer****\n");
+    printf("****CARD UNIT TEST 4: Council Room****\n");
 
-    printf("TEST 1: set deck, run and verify right Treasures added: \n");
-    //Update coins and grab the coin total before adventurer is played:
-    ucr = updateCoins(0, &testGameA, 0); 
-    if (ucr != 0)
-    {
-        printf("TEST CRITICAL FAIL; updateCoins fails\n");
-        exit(-1);
-    }
-
-    p0cc = testGameA.coins; 
-
-    //Stage player 0's deck to have a Treasure (gold) lowest, then on top:
-    //	gardens, feast, mine, Treasure(silver), duchy
-    testGameA.deck[0][testGameA.deckCount[0]] = gold;
+    printf("TEST 1: set deck and ensure top four cards from player's deck drawn into hand : \n");
+    //Stage player 0's deck to have a baron, village, feast and gardens on the top:
+    testGameA.deck[0][testGameA.deckCount[0]] = baron;
     testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = gardens;
+    testGameA.deck[0][testGameA.deckCount[0]] = village;
     testGameA.deckCount[0]++;
     testGameA.deck[0][testGameA.deckCount[0]] = feast;
     testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = mine;
-    testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = silver;
-    testGameA.deckCount[0]++;
-    testGameA.deck[0][testGameA.deckCount[0]] = duchy;
-    testGameA.deckCount[0]++;
+    testGameA.deck[0][testGameA.deckCount[0]] = gardens;
+    testGameA.deckCount[0]++;    
 
+    //Stage council_rooom into player 0;s hand:
+    testGameA.hand[0][4] = council_room;
 
-    //Stage adventurer into player 0;s hand:
-    testGameA.hand[0][4] = adventurer;
-
-    //Play adventurer card for player 0:
-    acr = adventurerEffect(&testGameA, 4);
-    if (acr != 0)
+    //Play council room card for player 0 -- for A5, modified the arguments to be:
+    //  (int card, int choice1, int choice2, int choice3, struct gameState *state, int handPos, int *bonus)
+    crcr = cardEffect(council_room, 0, 0, 0, &testGameA, 4, 0);
+    if (crcr != 0)
     {
-        printf("TEST CRITICAL FAIL; advenCard refactor fails\n");
+        printf("TEST CRITICAL FAIL; councilCard refactor fails\n");
         exit(-1);
-    }
+    }    
 
-    //Check player 0's hand count -- it should equal 6 (5 + 2 -1, with Adventurer discarded)
+    //Check player 0's hand count -- it should equal 8 (5 + 4 -1, with council room discarded)
     chc = testGameA.handCount[0];
-    printf("	card played, player 0 hand count is: %d; expected: %d\n", chc, 6);
+    printf("	card played, player 0 hand count is: %d; expected: %d\n", chc, 8);
 	testTotal++;
-	if(chc == 6)
+	if(chc == 8)
 	{
 		printf("PASSED\n");
 		passCount++;	
 	}
 	else printf("TEST FAILED\n");
 
-	//Check the cards above fourth in player's hand -- they should be silver and gold:
-	if(testGameA.hand[0][4] == silver) 
+	//Check the cards above fifth in player's hand -- they should be gardens, feast, village, baron:
+	if(testGameA.hand[0][5] == gardens) 
 	{
-		printf("	player 0 card 4 is silver\nPASSED\n");
+		printf("	player 0 card 5 is gardens\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 4 is silver\nTEST FAILED\n");
+	else printf("	player 0 card 5 is not gardens\nTEST FAILED\n");
 	testTotal++;
 
-	//Check the cards above 5 in player's hand -- they should be feast, village, baron:
-	if(testGameA.hand[0][5] == gold) 
+	if(testGameA.hand[0][6] == feast) 
 	{
-		printf("	player 0 card 5 is gold\nPASSED\n");
+		printf("	player 0 card 6 is feast\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 5 is gold\nTEST FAILED\n");
+	else printf("	player 0 card 6 is not feast\nTEST FAILED\n");
+	testTotal++;	
+
+	if(testGameA.hand[0][7] == village) 
+	{
+		printf("	player 0 card 7 is village\nPASSED\n");
+		passCount++;
+	}
+	else printf("	player 0 card 7 is not village\nTEST FAILED\n");
 	testTotal++;
 
+	if(testGameA.hand[0][8] == baron) 
+	{
+		printf("	player 0 card 8 is baron\nPASSED\n");
+		passCount++;
+	}
+	else printf("	player 0 card 8 is not baron\nTEST FAILED\n");
+	testTotal++;	
 
 
-    printf("\nTEST 2: coins return the right new Treasure total: \n");
 
-    //Run the update coins so we can measure coin total -- it should be the 
-    //	original coin total +5 for a silver and gold. 
-    ucr = updateCoins(0, &testGameA, 0); 
-    if (ucr != 0)
-    {
-        printf("TEST CRITICAL FAIL; updateCoins fails\n");
-        exit(-1);
-    }   
-    printf("	player 0 original coin count: %d\n", p0cc);
-    printf("	player 0 new coin count: %d, expected (above + 5): %d\n", testGameA.coins, p0cc+5);
+
+    printf("\nTEST 2: ensure player's buy amount has increased by 1: \n");
+    //Player 0 should have 2 buys, instead of one:
+    nb = testGameA.numBuys;
+    printf("	player 0 buys count is: %d; expected: %d\n", nb, 2);
 	testTotal++;
-	if (testGameA.coins == p0cc) 
+	if (nb == 2) 
 	{
 		printf("PASSED\n");
 		passCount++;
 	}
-	else printf("TEST FAILED\n");
 
 
 
 
-    /**********General Card Checks******************************/
-
-    printf("\nTEST 3: No change in other players' card counts: \n");
+    printf("\nTEST 3: other players' hands increased by 1 each, deck -1 each, and discard unchanged: \n");
     //Get current counts for player 1:
     chc = testGameA.handCount[1];
     cdec = testGameA.deckCount[1];
     cdis = testGameA.handCount[1];
 
     //Compare current card counts for players 1 original:
-    printf("	player 1 hand count is: %d; expected: %d\n", chc, p1hc);
+    printf("	player 1 hand count is: %d; expected: %d\n", chc, p1hc+1);
 	testTotal++;
-	if (chc == p1hc) passCount++;
-    printf("	player 1 deck count is: %d; expected: %d\n", cdec, p1dec);
+	if (chc == p1hc+1) 
+	{
+		printf("PASSED\n");
+		passCount++;
+	}
+	else printf("TEST FAILED\n");
+
+    printf("	player 1 deck count is: %d; expected: %d\n", cdec, p1dec-1);
 	testTotal++;
-	if (cdec == p1dec) passCount++;
+	if (cdec == p1dec-1) passCount++;
     printf("	player 1 discard count is: %d; expected: %d\n", cdis, p1dis);
 	testTotal++;
 	if (cdis == p1dis) passCount++;
@@ -222,23 +216,29 @@ int main() {
     cdec = testGameA.deckCount[2];
     cdis = testGameA.handCount[2];
     //Compare current card counts for players 2 and original:
-    printf("	player 2 hand count is: %d; expected: %d\n", chc, p2hc);
+    printf("	player 2 hand count is: %d; expected: %d\n", chc, p2hc+1);
 	testTotal++;
-	if (chc == p2hc) passCount++;
-    printf("	player 2 deck count is: %d; expected: %d\n", cdec, p2dec);
+	if (chc == p2hc+1) 
+	{
+		printf("PASSED\n");
+		passCount++;
+	}
+	else printf("TEST FAILED\n");
+    printf("	player 2 deck count is: %d; expected: %d\n", cdec, p2dec-1);
 	testTotal++;
-	if (cdec == p2dec) passCount++;
+	if (cdec == p2dec-1) passCount++;
     printf("	player 2 discard count is: %d; expected: %d\n", cdis, p2dis);
 	testTotal++;
 	if (cdis == p2dis) passCount++;
 
+    /**********General Card Checks******************************/
 
     printf("\nTEST 4: card cost check: \n");
-	//Per the enum, Adventurer is card #7
-	cc = getCost(7);
-	printf("	Adventurer card cost returns as: %d, expected: %d\n", cc, 6);
+	//Per the enum, council_room is card #8
+	cc = getCost(8);
+	printf("	Council Room card cost returns as: %d, expected: %d\n", cc, 5);
 	testTotal++;
-	if(cc == 6) 
+	if(cc == 5) 
 	{
 		printf("PASSED\n");
 		passCount++;
@@ -248,7 +248,7 @@ int main() {
 
 
 	//TEST SUMMARY:
-	printf("\n****CARD UNIT TEST 2: PASSED %d of %d tests****\n", passCount, testTotal);
+	printf("\n****CARD UNIT TEST 4: PASSED %d of %d tests****\n", passCount, testTotal);
 
 
 
