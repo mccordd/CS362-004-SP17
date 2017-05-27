@@ -109,6 +109,11 @@ int main() {
     testGameA.hand[0][3] = village;
     testGameA.hand[0][4] = remodel;
 
+    //Initial Hand:
+    for(i=0;i<testGameA.handCount[0]; i++){printf(" Player 0's card at pos %d is %d\n", i, testGameA.hand[0][i]);}
+
+
+
     //Play remodel card for player 0, trashing village (3) and buying a council_room (5) - enum is 8
     //  For A5, modified the arguments to be:
     //  (int card, int choice1, int choice2, int choice3, struct gameState *state, int handPos, int *bonus)
@@ -131,8 +136,8 @@ int main() {
 	}
 	else printf("TEST FAILED\n");
 
-	//Verify the added card (should be in position 3) is the council_room:
-	if(testGameA.hand[0][3] == council_room) 
+	//Verify the added card (should be in position 4) is the council_room:
+	if(testGameA.hand[0][4] == council_room) 
 	{
 		printf("	player 0 card 3 is council room\nPASSED\n");
 		passCount++;

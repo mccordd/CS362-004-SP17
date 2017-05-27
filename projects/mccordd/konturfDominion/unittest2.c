@@ -1,8 +1,9 @@
 /**************************************************************************************
     Name: Doug McCord
-    Date: 4/28/17
-    Project: CS 362 Assignment 3
-    Description: 
+    Date: 5/25/17 originally -- 4/28/17
+    Project: CS 362 Assignment 5 (modified from Assignment 3 version)
+
+    A3 Description:  
     "1- Write unit tests for four functions (not card implementations, and not 
         cardEffect) in dominion.c. Check these tests in as unittest1.c,unittest2.c, 
         unittest3.c, and unittest4.c. At least two of these functions should be more 

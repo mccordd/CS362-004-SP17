@@ -1,0 +1,140 @@
+BugsInTeammateCode.txt
+==============================
+
+Title:  Dominion Refactored Bug Report for Frederick Kontur
+(CS362 Assignment-5)
+
+==============================
+ID: 001
+Title: fullDeckCount() is the wrong function for its use
+Date:	5/25/17         
+Reported By: Doug McCord   
+Email: mccordd@oregonstate.edu
+
+
+Product: Dominion Code          Version: KonturFDominion from 362 Assignment-4
+Tester: unittest1.c             Version: mccordd's test from 362 Assignment-3, refactored     
+
+Is it reproducible: Yes
+
+Description
+===========
+Function AS USED appears designed to return a total count of a player's draw, hand and 
+discard pile for use of the Gardens card. But the function AS WRITTEN takes a card as an
+argument and counts the occurrences of this card. This is being used in the scoreFor function
+with the Gardens card to gather a total, but passes card number 0 (this enum is the Curse card, so it counts occurrences of Curse). 
+
+Steps to Produce/Reproduce with Expected and Actual Results:
+--------------------------
+Run fullDeckCount with a card value passed to it. It will never return the total count of all
+cards! Beyond unit testing, run the scoreFor with a Gardens card in hand and it will never be
+counted properly. 
+
+Estimated Severity
+--------------
+5/10 – game cannot score Gardens cards properly as implemented. But the game can easily
+be played without Garden card.  
+
+Estimated Priority
+--------------
+Of these bugs, #2. Requires gardens card to run afoul, hands can be played without this, 
+but playing with Garden card ruins it's use.  
+
+Proposed Fix
+--------------
+Modify this function to return the total of the passed player's 
+state->handCount[player] + state->deckCount[player] + state->discardCount[player],  
+which is actually much simpler than what is there. 
+
+
+
+
+
+
+==============================
+ID: 002
+Title: scoreFor searches by handCount and discardCount twice, instead of drawCount
+Date:	5/25/17         
+Reported By: Doug McCord   
+Email: mccordd@oregonstate.edu
+
+
+Product: Dominion Code          Version: KonturFDominion from 362 Assignment-4
+Tester: unittest2.c             Version: mccordd's test from 362 Assignment-3, refactored     
+
+Is it reproducible: Yes
+
+Description
+===========
+When this function iterates through a player's draw, hand and discard counts to count victory
+cards, it currently uses the hand and then discard twice. In cases where there is no
+discard, it will not count anything but what's in hand, and the totals will be wrong in most
+cases. 
+
+Steps to Produce/Reproduce with Expected and Actual Results:
+--------------------------
+Initialize a game and run scoreFor. As no one has discards yet, you'll see improper counts 
+for victory. 
+
+Estimated Severity
+--------------
+8/10 – game can't tally an accurate score. You can still the run the game, but scores 
+will not be accurate. 
+
+Estimated Priority
+--------------
+Of these bugs, #1. Game cannot be correctly played in most configurations without this 
+fix.  
+
+Proposed Fix
+--------------
+Change the counters to score hand, discard and deck -- now they score hand, discard and
+discard. This could be a very simple fix -- it requires changing the loop condition count, 
+and then the source for the lines of card evaluation within the loop.
+
+
+
+
+
+
+
+
+==============================
+ID: 003
+Title: Smithy card is never discarded when played
+Date:	5/26/17         
+Reported By: Doug McCord   
+Email: mccordd@oregonstate.edu
+
+
+Product: Dominion Code          Version: KonturFDominion from 362 Assignment-4
+Tester: cardtest1.c             Version: mccordd's test from 362 Assignment-3, refactored     
+
+Is it reproducible: Yes
+
+Description
+===========
+The Smithy card correctly adds three cards to the player's hand from the top of the
+player's deck, but it never discards itself. 
+
+Steps to Produce/Reproduce with Expected and Actual Results:
+--------------------------
+Run the refactored smithy function – smithyEffect(). It will draw 3 cards from the player's
+ deck into the player's hand correctly, but end with one extra card (the source Smithy 
+ Card). 
+
+Estimated Severity
+--------------
+3/10 –  game can be played without this kingdom card, but this card remains in the hand, 
+so if a player had extra actions they could theoretically continue to play it.  
+
+Estimated Priority
+--------------
+Of these bugs, #3 or lowest priority. This card works, the game can be played – it's just 
+too beneficial. It's not even the most broken of the cards, and you can play without it, 
+as it's a kingdom card. 
+
+Proposed Fix
+--------------
+Add the standard discard line the calls the dominion discard function at the hand
+position of the Smithy Card. 

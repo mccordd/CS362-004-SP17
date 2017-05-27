@@ -138,7 +138,8 @@ int main() {
 	}
 	else printf("TEST FAILED\n");
 
-	//Check the cards above fifth in player's hand -- they should be gardens, feast, village, baron:
+	//Check the cards above fifth in player's hand -- they should be gardens, feast, village and
+    //  due to the card 4 being dropped as discard, baron as 4!:
 	if(testGameA.hand[0][5] == gardens) 
 	{
 		printf("	player 0 card 5 is gardens\nPASSED\n");
@@ -163,12 +164,12 @@ int main() {
 	else printf("	player 0 card 7 is not village\nTEST FAILED\n");
 	testTotal++;
 
-	if(testGameA.hand[0][8] == baron) 
+	if(testGameA.hand[0][4] == baron) 
 	{
-		printf("	player 0 card 8 is baron\nPASSED\n");
+		printf("	player 0 card 4 is baron\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 8 is not baron\nTEST FAILED\n");
+	else printf("	player 0 card 4 is not baron\nTEST FAILED\n");
 	testTotal++;	
 
 
@@ -224,12 +225,25 @@ int main() {
 		passCount++;
 	}
 	else printf("TEST FAILED\n");
+
+
     printf("	player 2 deck count is: %d; expected: %d\n", cdec, p2dec-1);
-	testTotal++;
-	if (cdec == p2dec-1) passCount++;
+    testTotal++;
+    if (cdec == p2dec-1)    
+    {
+        printf("PASSED\n");
+        passCount++;
+    } 
+    else printf("TEST FAILED\n");
+
     printf("	player 2 discard count is: %d; expected: %d\n", cdis, p2dis);
 	testTotal++;
-	if (cdis == p2dis) passCount++;
+	if (cdis == p2dis)
+    {
+        printf("PASSED\n");
+        passCount++;
+    }
+    else printf("TEST FAILED\n");
 
     /**********General Card Checks******************************/
 
