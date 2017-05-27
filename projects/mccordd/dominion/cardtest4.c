@@ -1,8 +1,9 @@
 /**************************************************************************************
     Name: Doug McCord
-    Date: 4/28/17
-    Project: CS 362 Assignment 3
-    Description: 
+    Date: 5/25/17 originally -- 4/28/17
+    Project: CS 362 Assignment 5 (modified from Assignment 3 version)
+
+    A3 Description: 
     "1- Write unit tests for four functions (not card implementations, and not 
         cardEffect) in dominion.c. Check these tests in as unittest1.c,unittest2.c, 
         unittest3.c, and unittest4.c. At least two of these functions should be more 
@@ -117,8 +118,9 @@ int main() {
     //Stage council_rooom into player 0;s hand:
     testGameA.hand[0][4] = council_room;
 
-    //Play council room card for player 0:
-    crcr = councilCard(&testGameA, 4);
+    //Play council room card for player 0 -- for A5, modified the arguments to be:
+    //  (int card, int choice1, int choice2, int choice3, struct gameState *state, int handPos, int *bonus)
+    crcr = cardEffect(council_room, 0, 0, 0, &testGameA, 4, 0);
     if (crcr != 0)
     {
         printf("TEST CRITICAL FAIL; councilCard refactor fails\n");
@@ -129,20 +131,21 @@ int main() {
     chc = testGameA.handCount[0];
     printf("	card played, player 0 hand count is: %d; expected: %d\n", chc, 8);
 	testTotal++;
-	if(chc == 7)
+	if(chc == 8)
 	{
 		printf("PASSED\n");
 		passCount++;	
 	}
 	else printf("TEST FAILED\n");
 
-	//Check the cards above fifth in player's hand -- they should be gardens, feast, village, baron:
+	//Check the cards above fifth in player's hand -- they should be gardens, feast, village and
+    //  due to the card 4 being dropped as discard, baron as 4!:
 	if(testGameA.hand[0][5] == gardens) 
 	{
 		printf("	player 0 card 5 is gardens\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 5 is gardens\nTEST FAILED\n");
+	else printf("	player 0 card 5 is not gardens\nTEST FAILED\n");
 	testTotal++;
 
 	if(testGameA.hand[0][6] == feast) 
@@ -150,7 +153,7 @@ int main() {
 		printf("	player 0 card 6 is feast\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 6 is feast\nTEST FAILED\n");
+	else printf("	player 0 card 6 is not feast\nTEST FAILED\n");
 	testTotal++;	
 
 	if(testGameA.hand[0][7] == village) 
@@ -158,15 +161,15 @@ int main() {
 		printf("	player 0 card 7 is village\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 7 is village\nTEST FAILED\n");
+	else printf("	player 0 card 7 is not village\nTEST FAILED\n");
 	testTotal++;
 
-	if(testGameA.hand[0][8] == baron) 
+	if(testGameA.hand[0][4] == baron) 
 	{
-		printf("	player 0 card 8 is baron\nPASSED\n");
+		printf("	player 0 card 4 is baron\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 8 is baron\nTEST FAILED\n");
+	else printf("	player 0 card 4 is not baron\nTEST FAILED\n");
 	testTotal++;	
 
 
@@ -186,7 +189,7 @@ int main() {
 
 
 
-    printf("\nTEST 3: other players' hands increased by 1 each, deck and discard unchanged: \n");
+    printf("\nTEST 3: other players' hands increased by 1 each, deck -1 each, and discard unchanged: \n");
     //Get current counts for player 1:
     chc = testGameA.handCount[1];
     cdec = testGameA.deckCount[1];
@@ -202,9 +205,9 @@ int main() {
 	}
 	else printf("TEST FAILED\n");
 
-    printf("	player 1 deck count is: %d; expected: %d\n", cdec, p1dec);
+    printf("	player 1 deck count is: %d; expected: %d\n", cdec, p1dec-1);
 	testTotal++;
-	if (cdec == p1dec) passCount++;
+	if (cdec == p1dec-1) passCount++;
     printf("	player 1 discard count is: %d; expected: %d\n", cdis, p1dis);
 	testTotal++;
 	if (cdis == p1dis) passCount++;
@@ -222,12 +225,25 @@ int main() {
 		passCount++;
 	}
 	else printf("TEST FAILED\n");
-    printf("	player 2 deck count is: %d; expected: %d\n", cdec, p2dec);
-	testTotal++;
-	if (cdec == p2dec) passCount++;
+
+
+    printf("	player 2 deck count is: %d; expected: %d\n", cdec, p2dec-1);
+    testTotal++;
+    if (cdec == p2dec-1)    
+    {
+        printf("PASSED\n");
+        passCount++;
+    } 
+    else printf("TEST FAILED\n");
+
     printf("	player 2 discard count is: %d; expected: %d\n", cdis, p2dis);
 	testTotal++;
-	if (cdis == p2dis) passCount++;
+	if (cdis == p2dis)
+    {
+        printf("PASSED\n");
+        passCount++;
+    }
+    else printf("TEST FAILED\n");
 
     /**********General Card Checks******************************/
 

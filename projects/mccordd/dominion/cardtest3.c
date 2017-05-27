@@ -1,8 +1,9 @@
 /**************************************************************************************
     Name: Doug McCord
-    Date: 4/28/17
-    Project: CS 362 Assignment 3
-    Description: 
+    Date: 5/25/17 originally -- 4/28/17
+    Project: CS 362 Assignment 5 (modified from Assignment 3 version)
+
+    A3 Description: 
     "1- Write unit tests for four functions (not card implementations, and not 
         cardEffect) in dominion.c. Check these tests in as unittest1.c,unittest2.c, 
         unittest3.c, and unittest4.c. At least two of these functions should be more 
@@ -43,6 +44,7 @@
 
 int main() {
 
+    int i;
 
     //For saving initial 'other' player game state values:
     int p1hc, p1dec, p1dis;
@@ -107,8 +109,16 @@ int main() {
     testGameA.hand[0][3] = village;
     testGameA.hand[0][4] = remodel;
 
+    //Initial Hand:
+    for(i=0;i<testGameA.handCount[0]; i++){printf(" Player 0's card at pos %d is %d\n", i, testGameA.hand[0][i]);}
+
+
+
     //Play remodel card for player 0, trashing village (3) and buying a council_room (5) - enum is 8
-    rcr = remodelCard(3, 8, &testGameA, 4);
+    //  For A5, modified the arguments to be:
+    //  (int card, int choice1, int choice2, int choice3, struct gameState *state, int handPos, int *bonus)
+    //remodelCard(3, 8, &testGameA, 4)
+    rcr = cardEffect(remodel, 3, 8, 0, &testGameA, 4, 0);
     if (rcr != 0)
     {
         printf("TEST CRITICAL FAIL; remodelCard refactor fails\n");
@@ -126,14 +136,17 @@ int main() {
 	}
 	else printf("TEST FAILED\n");
 
-	//Verify the added card (should be in position 3) is the council_room:
-	if(testGameA.hand[0][3] == council_room) 
+	//Verify the added card (should be in position 4) is the council_room:
+	if(testGameA.hand[0][4] == council_room) 
 	{
-		printf("	player 0 card 4 is council room\nPASSED\n");
+		printf("	player 0 card 3 is council room\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 4 is council room\nTEST FAILED\n");
-	testTotal++;		
+	else printf("	player 0 card 3 is not council room\nTEST FAILED\n");
+	testTotal++;	
+
+    //TEMP: 
+    for(i=0;i<testGameA.handCount[0]; i++){printf(" player 0's card at pos %d is %d\n", i, testGameA.hand[0][i]);}
 
 	/*
 	//TEMP TEST: returning as village -- so it is not being trashed as directed
@@ -151,8 +164,8 @@ int main() {
     testGameA.hand[0][4] = remodel;
 
     //Play remodel card for player 0, trashing village (3) and buying a province (8) - enum is 3
-    rcr = remodelCard(3, 3, &testGameA, 4);
-
+    //rcr = remodelCard(3, 3, &testGameA, 4);
+    rcr = cardEffect(remodel, 3, 3, 0, &testGameA, 4, 0);
     printf("	P0 buys too much, function returned: %d, expected: %d\n", rcr, -1);
 	testTotal++;
 	if (rcr == -1) 

@@ -359,6 +359,12 @@ int endTurn(struct gameState *state) {
   }
   state->handCount[currentPlayer] = 0;//Reset hand count
     
+    //int k; move to top
+  //Next player draws hand
+  for (k = 0; k < 5; k++){
+    drawCard(state->whoseTurn, state);//Draw a card
+  }
+
   //Code for determining the player
   if (currentPlayer < (state->numPlayers - 1)){ 
     state->whoseTurn = currentPlayer + 1;//Still safe to increment
@@ -374,12 +380,6 @@ int endTurn(struct gameState *state) {
   state->numBuys = 1;
   state->playedCardCount = 0;
   state->handCount[state->whoseTurn] = 0;
-
-  //int k; move to top
-  //Next player draws hand
-  for (k = 0; k < 5; k++){
-    drawCard(state->whoseTurn, state);//Draw a card
-  }
 
   //Update money
   updateCoins(state->whoseTurn, state , 0);
@@ -606,7 +606,7 @@ int advenCard(struct gameState *state) {
 	//Code from the switch statement:
 
 	//Keep drawing until the extra treasures are found:	
-	while(drawntreasure<1){
+	while(drawntreasure<2){
 
 		//Check the discard pile -- if empties, reshuffle
 		if (state->deckCount[currentPlayer] <1){
@@ -646,7 +646,7 @@ int smithyCard(struct gameState *state, int handPos) {
 	//Code from switch:
 	
 	//Draw 3 more cards into player's hand:
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 3; i++)
 	{
 	  drawCard(currentPlayer, state);
 	}		

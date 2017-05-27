@@ -1,8 +1,9 @@
 /**************************************************************************************
     Name: Doug McCord
-    Date: 4/28/17
-    Project: CS 362 Assignment 3
-    Description: 
+    Date: 5/25/17 originally -- 4/28/17
+    Project: CS 362 Assignment 5 (modified from Assignment 3 version)
+
+    A3 Description:  
     "1- Write unit tests for four functions (not card implementations, and not 
         cardEffect) in dominion.c. Check these tests in as unittest1.c,unittest2.c, 
         unittest3.c, and unittest4.c. At least two of these functions should be more 
@@ -42,6 +43,8 @@
 
 
 int main() {
+
+    int i;
 
     //For saving initial 'other' player game state values:
     int p1hc, p1dec, p1dis;
@@ -111,6 +114,10 @@ int main() {
     //Stage smithy into player 0;s hand:
     testGameA.hand[0][4] = smithy;
 
+    //Initial Hand:
+    for(i=0;i<testGameA.handCount[0]; i++){printf(" Player 0's card at pos %d is %d\n", i, testGameA.hand[0][i]);}
+
+
     //Play smithy card for player 0:
     scr = smithyCard(&testGameA, 4);
     if (scr != 0)
@@ -130,32 +137,35 @@ int main() {
 	}
 	else printf("TEST FAILED\n");
 
-	//Check the cards above fifth in player's hand -- they should be feast, village, baron:
+    //Check the cards above 5 in player's hand -- they should be baron, village, feast, 
+    //  due to the card 4 being dropped as discard!:
+    if(testGameA.hand[0][4] == baron) 
+    {
+        printf("    player 0 card 4 is baron\nPASSED\n");
+        passCount++;
+    }
+    else printf("   player 0 card 4 is not baron\nTEST FAILED\n");
+    testTotal++;        
+
+    //Check the cards above 5 in player's hand -- they should be baron, village, feast, 
+    //  due to the card 4 being dropped as discard!:
 	if(testGameA.hand[0][5] == feast) 
 	{
 		printf("	player 0 card 5 is feast\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 5 is feast\nTEST FAILED\n");
+	else printf("	player 0 card 5 is not feast\nTEST FAILED\n");
 	testTotal++;
 
-	//Check the cards above 5 in player's hand -- they should be feast, village, baron:
+    //Check the cards above 5 in player's hand -- they should be baron, village, feast, 
+    //  due to the card 4 being dropped as discard!:
 	if(testGameA.hand[0][6] == village) 
 	{
 		printf("	player 0 card 6 is village\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 6 is village\nTEST FAILED\n");
+	else printf("	player 0 card 6 is not village\nTEST FAILED\n");
 	testTotal++;
-
-	//Check the cards above 5 in player's hand -- they should be feast, village, baron:
-	if(testGameA.hand[0][7] == baron) 
-	{
-		printf("	player 0 card 7 is baron\nPASSED\n");
-		passCount++;
-	}
-	else printf("	player 0 card 7 is baron\nTEST FAILED\n");
-	testTotal++;	
 
 
     printf("\nTEST 2: Smithy card is discarded properly after use: \n");
@@ -172,8 +182,9 @@ int main() {
     }
     else printf("	player 0 top discard is smithy\nTEST FAILED\n");
 	testTotal++;
-	
 
+    //Final hand:
+    for(i=0;i<testGameA.handCount[0]; i++){printf(" Player 0's card at pos %d is %d\n", i, testGameA.hand[0][i]);}
 
 
     /**********General Card Checks******************************/

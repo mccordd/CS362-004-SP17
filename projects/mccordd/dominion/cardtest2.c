@@ -1,8 +1,9 @@
 /**************************************************************************************
     Name: Doug McCord
-    Date: 4/28/17
-    Project: CS 362 Assignment 3
-    Description: 
+    Date: 5/25/17 originally -- 4/28/17
+    Project: CS 362 Assignment 5 (modified from Assignment 3 version)
+
+    A3 Description: 
     "1- Write unit tests for four functions (not card implementations, and not 
         cardEffect) in dominion.c. Check these tests in as unittest1.c,unittest2.c, 
         unittest3.c, and unittest4.c. At least two of these functions should be more 
@@ -43,6 +44,7 @@
 
 int main() {
 
+    int i;
 
     //For saving initial 'other' player game state values:
     int p1hc, p1dec, p1dis;
@@ -106,16 +108,6 @@ int main() {
     printf("****CARD UNIT TEST 2: Adventurer****\n");
 
     printf("TEST 1: set deck, run and verify right Treasures added: \n");
-    //Update coins and grab the coin total before adventurer is played:
-    ucr = updateCoins(0, &testGameA, 0); 
-    if (ucr != 0)
-    {
-        printf("TEST CRITICAL FAIL; updateCoins fails\n");
-        exit(-1);
-    }
-
-    p0cc = testGameA.coins; 
-
     //Stage player 0's deck to have a Treasure (gold) lowest, then on top:
     //	gardens, feast, mine, Treasure(silver), duchy
     testGameA.deck[0][testGameA.deckCount[0]] = gold;
@@ -134,6 +126,21 @@ int main() {
 
     //Stage adventurer into player 0;s hand:
     testGameA.hand[0][4] = adventurer;
+
+    //Update coins and grab the coin total before adventurer is played:
+    ucr = updateCoins(0, &testGameA, 0); 
+    if (ucr != 0)
+    {
+        printf("TEST CRITICAL FAIL; updateCoins fails\n");
+        exit(-1);
+    }
+    //Get initial coin count:
+    p0cc = testGameA.coins; 
+    printf("    Player 0 initial coin value is: %d\n", p0cc);
+    //Initial Hand:
+    for(i=0;i<testGameA.handCount[0]; i++){printf(" Player 0's card at pos %d is %d\n", i, testGameA.hand[0][i]);}
+
+
 
     //Play adventurer card for player 0:
     acr = advenCard(&testGameA);
@@ -154,24 +161,28 @@ int main() {
 	}
 	else printf("TEST FAILED\n");
 
-	//Check the cards above fourth in player's hand -- they should be silver and gold:
-	if(testGameA.hand[0][4] == silver) 
+	//Check the cards in player's hand -- they should be gold and silver, reversed --
+    //  due to the card 4 being dropped as discard!:
+	if(testGameA.hand[0][4] == gold) 
 	{
-		printf("	player 0 card 4 is silver\nPASSED\n");
+		printf("	player 0 card 4 is gold\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 4 is silver\nTEST FAILED\n");
+	else printf("	player 0 card 4 is not gold\nTEST FAILED\n");
 	testTotal++;
 
-	//Check the cards above 5 in player's hand -- they should be feast, village, baron:
-	if(testGameA.hand[0][5] == gold) 
+    //Check the cards in player's hand -- they should be gold and silver, reversed --
+    //  due to the card 4 being dropped as discard!:
+	if(testGameA.hand[0][5] == silver) 
 	{
-		printf("	player 0 card 5 is gold\nPASSED\n");
+		printf("	player 0 card 5 is silver\nPASSED\n");
 		passCount++;
 	}
-	else printf("	player 0 card 5 is gold\nTEST FAILED\n");
+	else printf("	player 0 card 5 is not silver\nTEST FAILED\n");
 	testTotal++;
 
+    //Final Hand:
+    for(i=0;i<testGameA.handCount[0]; i++){printf(" player 0's card at pos %d is %d\n", i, testGameA.hand[0][i]);}
 
 
     printf("\nTEST 2: coins return the right new Treasure total: \n");
@@ -187,7 +198,7 @@ int main() {
     printf("	player 0 original coin count: %d\n", p0cc);
     printf("	player 0 new coin count: %d, expected (above + 5): %d\n", testGameA.coins, p0cc+5);
 	testTotal++;
-	if (testGameA.coins == p0cc) 
+	if (testGameA.coins == p0cc+5) 
 	{
 		printf("PASSED\n");
 		passCount++;
