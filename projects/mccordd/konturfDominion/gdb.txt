@@ -1,0 +1,50 @@
+Breakpoint 1 at 0x406ec6: file randomtestadventurer.c, line 84.
+Starting program: /home/dmac/Desktop/Local_Compile/CS362_SE2/A5/randomtestadventurer 
+
+Breakpoint 1, main () at randomtestadventurer.c:87
+87	  printf ("*************RANDOM TEST ADVENTURER CARD*************\n");
+88	  printf ("Testing adventurer Card:\n");
+92	  SelectStream(2);
+93	  PutSeed(3);
+96	  for (n = 0; n < TESTS; n++) {
+97	    for (i = 0; i < sizeof(struct gameState); i++) {
+98	      ((char*)&TestState)[i] = floor(Random()*256);
+97	    for (i = 0; i < sizeof(struct gameState); i++) {
+98	      ((char*)&TestState)[i] = floor(Random()*256);
+97	    for (i = 0; i < sizeof(struct gameState); i++) {
+98	      ((char*)&TestState)[i] = floor(Random()*256);
+97	    for (i = 0; i < sizeof(struct gameState); i++) {
+Undefined command: "var".  Try "help".
+$1 = 2
+98	      ((char*)&TestState)[i] = floor(Random()*256);
+97	    for (i = 0; i < sizeof(struct gameState); i++) {
+98	      ((char*)&TestState)[i] = floor(Random()*256);
+97	    for (i = 0; i < sizeof(struct gameState); i++) {
+$2 = 4
+98	      ((char*)&TestState)[i] = floor(Random()*256);
+97	    for (i = 0; i < sizeof(struct gameState); i++) {
+98	      ((char*)&TestState)[i] = floor(Random()*256);
+97	    for (i = 0; i < sizeof(struct gameState); i++) {
+98	      ((char*)&TestState)[i] = floor(Random()*256);
+97	    for (i = 0; i < sizeof(struct gameState); i++) {
+98	      ((char*)&TestState)[i] = floor(Random()*256);
+Breakpoint 2 at 0x4074e0: file randomtestadventurer.c, line 236.
+Continuing.
+
+Breakpoint 2, main () at randomtestadventurer.c:239
+239	    testsPassed += advenCardTester(&TestState, handPos);
+$3 = 2000
+
+Program received signal SIGSEGV, Segmentation fault.
+0x0000000000406087 in discardCard (handPos=54, currentPlayer=0, state=0x7fffffff7680, trashFlag=0)
+    at dominion.c:1260
+1260	      state->playedCards[state->playedCardCount] = state->hand[currentPlayer][handPos]; 
+$4 = 0
+Cannot access memory at address 0x7fff180ae9d0
+$5 = 7
+$6 = -972896998
+A debugging session is active.
+
+	Inferior 1 [process 3908] will be killed.
+
+Quit anyway? (y or n) 

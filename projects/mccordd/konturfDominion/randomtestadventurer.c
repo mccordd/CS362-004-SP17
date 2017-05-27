@@ -1,8 +1,9 @@
 /**************************************************************************************
     Name: Doug McCord
-    Date: 5/9/17
-    Project: CS 362 Assignment 4
-    Description: 
+    Date: 5/25/17 originally -- 5/9/17
+    Project: CS 362 Assignment 5 (modified from Assignment 4 version)
+
+    A4 Description:  
     "1- Write an automated random test generator for three Dominion cards “the 
         refactored code you created for assignment-2”, one of them being the adventurer 
         card, and at least one being a card you wrote unit tests for in assignment-3. 
@@ -234,7 +235,12 @@ int main () {
     */
 
     /*Run the advenCardTester with randomized state:*/
-    /*NOTE: For Assignment-5, needed to add the handPos*/
+
+    /*NOTE: For Assignment-5, needed to add the handPos, and per debugging, 
+	added back this playedCardCount default*/
+
+    TestState.playedCardCount = 0; 
+
     testsPassed += advenCardTester(&TestState, handPos);
   }
 
